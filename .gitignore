@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+.idea/
+.vscode/
+postgres_data/
+minio_data/
+Что планируется сделать.txt
+docker-compose.yml
