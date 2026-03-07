@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     s3_bucket: str
     s3_region: str = "us-east-1"
 
+    secret_key: str = "change-me-in-production"
+    access_token_expire_minutes: int = 60 * 24
+
     class Config:
         env_file = ".env"
 
