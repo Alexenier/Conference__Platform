@@ -5,11 +5,12 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.conference import ConferenceCreate, ConferenceResponse, ConferenceUpdate
 from app.services import conference_service
+from app.api.deps import get_current_user, require_admin
 
 router = APIRouter(prefix="/conferences", tags=["conferences"])
 
 
-@router.post("/", response_model=ConferenceResponse)
+@router.post("/", response_model=ConferenceResponse, dependencies=[Depends(require_admin)])
 def create_conference(payload: ConferenceCreate, db: Session = Depends(get_db)):
     return conference_service.create_conference(db, payload)
 
@@ -27,7 +28,7 @@ def get_conference(conference_id: uuid.UUID, db: Session = Depends(get_db)):
     return conference
 
 
-@router.patch("/{conference_id}", response_model=ConferenceResponse)
+@router.patch("/{conference_id}", response_model=ConferenceResponse, dependencies=[Depends(require_admin)])
 def update_conference(
     conference_id: uuid.UUID,
     payload: ConferenceUpdate,
@@ -39,7 +40,7 @@ def update_conference(
     return conference_service.update_conference(db, conference, payload)
 
 
-@router.delete("/{conference_id}", status_code=204)
+@router.delete("/{conference_id}", status_code=204, dependencies=[Depends(require_admin)])
 def delete_conference(conference_id: uuid.UUID, db: Session = Depends(get_db)):
     conference = conference_service.get_conference(db, conference_id)
     if not conference:

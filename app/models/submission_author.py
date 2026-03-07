@@ -1,9 +1,8 @@
 import uuid
 
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -23,4 +22,6 @@ class SubmissionAuthor(Base):
     organization: Mapped[str | None] = mapped_column(String(500), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_presenter: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    order: Mapped[int] = mapped_column(nullable=False, default=0)
+    order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    submission: Mapped["Submission"] = relationship("Submission", back_populates="authors")
