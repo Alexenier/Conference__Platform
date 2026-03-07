@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Мої заявки — Conference Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../css/main.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <span class="navbar-brand"><i class="bi bi-journal-richtext"></i> Conference Platform</span>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <span class="text-white" id="userName"></span>
+      <button class="btn btn-outline-light btn-sm" onclick="auth.logout()">
+        <i class="bi bi-box-arrow-right"></i> Вийти
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Мої заявки</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSubmissionModal">
+      <i class="bi bi-plus-lg"></i> Нова заявка
+    </button>
+  </div>
+
+  <!-- Alert -->
+  <div id="pageAlert" class="alert d-none"></div>
+
+  <!-- Submissions table -->
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Назва доповіді</th>
+            <th>Секція</th>
+            <th>Статус</th>
+            <th>Дата</th>
+            <th>Файли</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="submissionsTable">
+          <tr><td colspan="6" class="text-center text-muted py-4">Завантаження...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- New Submission Modal -->
+<div class="modal fade" id="newSubmissionModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Нова заявка</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="modalError" class="alert alert-danger d-none"></div>
+
+        <div class="mb-3">
+          <label class="form-label">Конференція</label>
+          <select id="conferenceSelect" class="form-select">
+            <option value="">Завантаження...</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Назва доповіді</label>
+          <input type="text" id="subTitle" class="form-control" placeholder="Введіть назву доповіді">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Секція</label>
+          <select id="sectionSelect" class="form-select">
+            <option value="">Оберіть секцію</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Анотація</label>
+          <textarea id="subAbstract" class="form-control" rows="3" placeholder="Короткий опис доповіді"></textarea>
+        </div>
+
+        <hr>
+        <h6>Автори</h6>
+        <div id="authorsList"></div>
+        <button class="btn btn-outline-secondary btn-sm mt-2" onclick="addAuthorRow()">
+          <i class="bi bi-person-plus"></i> Додати автора
+        </button>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+        <button class="btn btn-primary" onclick="submitNewSubmission()">
+          <i class="bi bi-send"></i> Подати заявку
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Files Modal -->
+<div class="modal fade" id="filesModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-paperclip"></i> Файли заявки</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="filesList" class="mb-3"></div>
+        <hr>
+        <label class="form-label">Завантажити тези (.docx)</label>
+        <input type="file" id="fileInput" class="form-control" accept=".docx,.pdf">
+        <div id="uploadResult" class="mt-2"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        <button class="btn btn-primary" onclick="uploadFile()">
+          <i class="bi bi-upload"></i> Завантажити
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  auth.requireAuth();
+
+  let currentUser = null;
+  let currentSubmissionId = null;
+
+  const STATUS_LABELS = {
+    draft: { label: "Чернетка", cls: "secondary" },
+    submitted: { label: "Подано", cls: "primary" },
+    under_review: { label: "На розгляді", cls: "warning" },
+    accepted: { label: "Прийнято", cls: "success" },
+    rejected: { label: "Відхилено", cls: "danger" },
+  };
+
+  async function init() {
+    currentUser = auth.getUser();
+    if (!currentUser) {
+      currentUser = await api.me();
+      localStorage.setItem("user", JSON.stringify(currentUser));
+    }
+    document.getElementById("userName").textContent = currentUser.full_name || currentUser.email;
+
+    await loadConferences();
+    await loadSections();
+    await loadSubmissions();
+  }
+
+  async function loadConferences() {
+    const conferences = await api.getConferences(true);
+    const sel = document.getElementById("conferenceSelect");
+    sel.innerHTML = conferences.map(c =>
+      `<option value="${c.id}">${c.title}</option>`
+    ).join("");
+  }
+
+  async function loadSections() {
+    const data = await api.getSections();
+    const sel = document.getElementById("sectionSelect");
+    sel.innerHTML = `<option value="">Оберіть секцію</option>` +
+      data.sections.map(s => `<option value="${s}">${s}</option>`).join("");
+  }
+
+  async function loadSubmissions() {
+    const tbody = document.getElementById("submissionsTable");
+    try {
+      const submissions = await api.getSubmissions({ author_id: currentUser.id });
+      if (!submissions.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Заявок ще немає</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = submissions.map(s => {
+        const st = STATUS_LABELS[s.status] || { label: s.status, cls: "secondary" };
+        const authors = s.authors.map(a => a.full_name).join(", ") || "—";
+        return `
+          <tr>
+            <td>
+              <div class="fw-semibold">${s.title}</div>
+              <small class="text-muted">${authors}</small>
+            </td>
+            <td><small>${s.section || "—"}</small></td>
+            <td><span class="badge bg-${st.cls}">${st.label}</span></td>
+            <td><small>${new Date(s.created_at).toLocaleDateString("uk-UA")}</small></td>
+            <td>
+              <button class="btn btn-outline-secondary btn-sm" onclick="openFiles('${s.id}')">
+                <i class="bi bi-paperclip"></i>
+              </button>
+            </td>
+            <td></td>
+          </tr>`;
+      }).join("");
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${e.message}</td></tr>`;
+    }
+  }
+
+  let authorCount = 0;
+  function addAuthorRow() {
+    authorCount++;
+    const div = document.createElement("div");
+    div.className = "row g-2 mb-2 author-row";
+    div.innerHTML = `
+      <div class="col-md-4">
+        <input type="text" class="form-control form-control-sm author-name" placeholder="Прізвище І.О.">
+      </div>
+      <div class="col-md-4">
+        <input type="text" class="form-control form-control-sm author-org" placeholder="Організація">
+      </div>
+      <div class="col-md-3">
+        <input type="email" class="form-control form-control-sm author-email" placeholder="Email">
+      </div>
+      <div class="col-md-1">
+        <button class="btn btn-outline-danger btn-sm" onclick="this.closest('.author-row').remove()">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>`;
+    document.getElementById("authorsList").appendChild(div);
+  }
+
+  async function submitNewSubmission() {
+    const errEl = document.getElementById("modalError");
+    errEl.classList.add("d-none");
+
+    const conference_id = document.getElementById("conferenceSelect").value;
+    const title = document.getElementById("subTitle").value.trim();
+    const section = document.getElementById("sectionSelect").value;
+    const abstract = document.getElementById("subAbstract").value.trim();
+
+    if (!title) {
+      errEl.textContent = "Введіть назву доповіді";
+      errEl.classList.remove("d-none");
+      return;
+    }
+
+    const authors = [...document.querySelectorAll(".author-row")].map((row, i) => ({
+      full_name: row.querySelector(".author-name").value.trim(),
+      organization: row.querySelector(".author-org").value.trim(),
+      email: row.querySelector(".author-email").value.trim(),
+      is_presenter: i === 0,
+      order: i,
+    })).filter(a => a.full_name);
+
+    try {
+      await api.createSubmission({
+        conference_id,
+        author_id: currentUser.id,
+        title,
+        abstract,
+        section: section || null,
+        authors,
+      });
+      bootstrap.Modal.getInstance(document.getElementById("newSubmissionModal")).hide();
+      await loadSubmissions();
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.remove("d-none");
+    }
+  }
+
+  async function openFiles(submissionId) {
+    currentSubmissionId = submissionId;
+    document.getElementById("uploadResult").innerHTML = "";
+    document.getElementById("fileInput").value = "";
+    await loadFiles();
+    new bootstrap.Modal(document.getElementById("filesModal")).show();
+  }
+
+  async function loadFiles() {
+    const list = document.getElementById("filesList");
+    try {
+      const files = await api.getFiles(currentSubmissionId);
+      if (!files.length) {
+        list.innerHTML = `<p class="text-muted">Файлів ще немає</p>`;
+        return;
+      }
+      list.innerHTML = files.map(f => `
+        <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+          <div>
+            <i class="bi bi-file-earmark-word text-primary"></i>
+            <span class="ms-2">${f.original_name}</span>
+            <small class="text-muted ms-2">${(f.size_bytes / 1024).toFixed(1)} KB</small>
+          </div>
+          <button class="btn btn-outline-danger btn-sm" onclick="removeFile('${f.id}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>`).join("");
+    } catch (e) {
+      list.innerHTML = `<p class="text-danger">${e.message}</p>`;
+    }
+  }
+
+  async function uploadFile() {
+    const fileInput = document.getElementById("fileInput");
+    const resultEl = document.getElementById("uploadResult");
+    if (!fileInput.files.length) return;
+
+    try {
+      const result = await api.uploadFile(currentSubmissionId, fileInput.files[0]);
+      let html = `<div class="alert alert-success">Файл завантажено!</div>`;
+      if (result.validation) {
+        const v = result.validation;
+        if (v.ok === true) {
+          html += `<div class="alert alert-success"><i class="bi bi-check-circle"></i> Тези оформлені коректно</div>`;
+        } else if (v.ok === false) {
+          const errors = v.issues.filter(i => i.severity === "error");
+          const warnings = v.issues.filter(i => i.severity === "warning");
+          html += `<div class="alert alert-warning">
+            <strong>Знайдено проблеми:</strong><br>
+            ${errors.map(i => `<div class="text-danger"><i class="bi bi-x-circle"></i> ${i.message}</div>`).join("")}
+            ${warnings.map(i => `<div class="text-warning"><i class="bi bi-exclamation-triangle"></i> ${i.message}</div>`).join("")}
+          </div>`;
+        }
+      }
+      resultEl.innerHTML = html;
+      await loadFiles();
+    } catch (e) {
+      resultEl.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+    }
+  }
+
+  async function removeFile(fileId) {
+    if (!confirm("Видалити файл?")) return;
+    try {
+      await api.deleteFile(currentSubmissionId, fileId);
+      await loadFiles();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
