@@ -46,3 +46,18 @@ def get_submission_files(db: Session, submission_id: uuid.UUID) -> list[Submissi
         .filter(SubmissionFile.submission_id == submission_id)
         .all()
     )
+
+
+def delete_submission_file(db: Session, file_id: uuid.UUID) -> None:
+    from app.services.storage import delete_file
+    record = db.query(SubmissionFile).filter(SubmissionFile.id == file_id).first()
+    if not record:
+        raise ValueError("Файл не найден")
+
+    try:
+        delete_file(record.bucket, record.object_key)
+    except Exception:
+        pass  # если в MinIO уже нет — всё равно удаляем из БД
+
+    db.delete(record)
+    db.commit()

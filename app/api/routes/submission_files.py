@@ -85,3 +85,17 @@ def get_validation(
     if not report:
         raise HTTPException(status_code=404, detail="Отчёт валидации не найден")
     return {"ok": report.ok, "issues": report.issues, "created_at": report.created_at}
+
+@router.delete("/{file_id}")
+def delete_file(
+    submission_id: uuid.UUID,
+    file_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    from app.services.submission_file_service import delete_submission_file
+    try:
+        delete_submission_file(db, file_id)
+        return {"ok": True}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
