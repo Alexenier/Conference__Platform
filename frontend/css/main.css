@@ -1,0 +1,19 @@
+body {
+  min-height: 100vh;
+}
+
+.navbar-brand {
+  font-weight: 700;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.status-badge {
+  font-size: 0.8rem;
+}
+
+.table th {
+  background-color: #f8f9fa;
+}
