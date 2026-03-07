@@ -27,6 +27,7 @@ class Submission(Base):
 
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     abstract: Mapped[str | None] = mapped_column(Text, nullable=True)
+    section: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="draft")
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
