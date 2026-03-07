@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import io
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -53,7 +54,7 @@ class ThesisStyleRules:
 
 def validate_thesis_docx(path: str | Path, rules: ThesisStyleRules | None = None) -> ValidationReport:
     rules = rules or ThesisStyleRules()
-    doc = Document(str(path))
+    doc = Document(path)
 
     issues: list[ValidationIssue] = []
 
