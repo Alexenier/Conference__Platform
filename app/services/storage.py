@@ -49,3 +49,8 @@ def upload_stream(fileobj: BinaryIO, original_name: str, content_type: str) -> s
     )
 
     return object_key
+
+def download_file(bucket: str, object_key: str) -> bytes:
+    s3 = _get_s3_client()
+    response = s3.get_object(Bucket=bucket, Key=object_key)
+    return response["Body"].read()

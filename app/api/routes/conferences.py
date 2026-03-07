@@ -64,3 +64,19 @@ def download_program(conference_id: uuid.UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.get("/{conference_id}/collection.pdf", dependencies=[Depends(require_admin)])
+def download_collection(conference_id: uuid.UUID, db: Session = Depends(get_db)):
+    try:
+        from app.services.collection_generator import generate_collection_pdf
+        pdf_bytes = generate_collection_pdf(db, conference_id)
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=collection_{conference_id}.pdf"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
