@@ -10,13 +10,12 @@
 </head>
 <body class="bg-light">
 
-<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container">
     <span class="navbar-brand"><i class="bi bi-journal-richtext"></i> Conference Platform</span>
     <div class="ms-auto d-flex align-items-center gap-3">
       <span class="text-white" id="userName"></span>
-      <button class="btn btn-outline-light btn-sm" onclick="auth.logout()">
+      <button class="btn btn-outline-light btn-sm" onclick="auth.logout()" title="Вийти">
         <i class="bi bi-box-arrow-right"></i> Вийти
       </button>
     </div>
@@ -25,18 +24,15 @@
 
 <div class="container mt-4">
 
-  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Мої заявки</h4>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSubmissionModal">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSubmissionModal" title="Створити нову заявку">
       <i class="bi bi-plus-lg"></i> Нова заявка
     </button>
   </div>
 
-  <!-- Alert -->
   <div id="pageAlert" class="alert d-none"></div>
 
-  <!-- Submissions table -->
   <div class="card shadow-sm">
     <div class="card-body p-0">
       <table class="table table-hover mb-0">
@@ -47,11 +43,10 @@
             <th>Статус</th>
             <th>Дата</th>
             <th>Файли</th>
-            <th></th>
           </tr>
         </thead>
         <tbody id="submissionsTable">
-          <tr><td colspan="6" class="text-center text-muted py-4">Завантаження...</td></tr>
+          <tr><td colspan="5" class="text-center text-muted py-4">Завантаження...</td></tr>
         </tbody>
       </table>
     </div>
@@ -60,51 +55,51 @@
 </div>
 
 <!-- New Submission Modal -->
-<div class="modal fade" id="newSubmissionModal" tabindex="-1">
+<div class="modal fade" id="newSubmissionModal" tabindex="-1" aria-labelledby="newSubmissionModalLabel" aria-modal="true" role="dialog">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Нова заявка</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="newSubmissionModalLabel"><i class="bi bi-plus-circle"></i> Нова заявка</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
       </div>
       <div class="modal-body">
         <div id="modalError" class="alert alert-danger d-none"></div>
 
         <div class="mb-3">
-          <label class="form-label">Конференція</label>
-          <select id="conferenceSelect" class="form-select">
+          <label for="conferenceSelect" class="form-label">Конференція</label>
+          <select id="conferenceSelect" class="form-select" aria-label="Оберіть конференцію">
             <option value="">Завантаження...</option>
           </select>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Назва доповіді</label>
+          <label for="subTitle" class="form-label">Назва доповіді</label>
           <input type="text" id="subTitle" class="form-control" placeholder="Введіть назву доповіді">
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Секція</label>
-          <select id="sectionSelect" class="form-select">
+          <label for="sectionSelect" class="form-label">Секція</label>
+          <select id="sectionSelect" class="form-select" aria-label="Оберіть секцію">
             <option value="">Оберіть секцію</option>
           </select>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Анотація</label>
+          <label for="subAbstract" class="form-label">Анотація</label>
           <textarea id="subAbstract" class="form-control" rows="3" placeholder="Короткий опис доповіді"></textarea>
         </div>
 
         <hr>
         <h6>Автори</h6>
         <div id="authorsList"></div>
-        <button class="btn btn-outline-secondary btn-sm mt-2" onclick="addAuthorRow()">
+        <button class="btn btn-outline-secondary btn-sm mt-2" onclick="addAuthorRow()" title="Додати автора">
           <i class="bi bi-person-plus"></i> Додати автора
         </button>
 
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-        <button class="btn btn-primary" onclick="submitNewSubmission()">
+        <button class="btn btn-primary" onclick="submitNewSubmission()" title="Подати заявку">
           <i class="bi bi-send"></i> Подати заявку
         </button>
       </div>
@@ -113,23 +108,23 @@
 </div>
 
 <!-- Files Modal -->
-<div class="modal fade" id="filesModal" tabindex="-1">
+<div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-modal="true" role="dialog">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-paperclip"></i> Файли заявки</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="filesModalLabel"><i class="bi bi-paperclip"></i> Файли заявки</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
       </div>
       <div class="modal-body">
         <div id="filesList" class="mb-3"></div>
         <hr>
-        <label class="form-label">Завантажити тези (.docx)</label>
-        <input type="file" id="fileInput" class="form-control" accept=".docx,.pdf">
+        <label for="fileInput" class="form-label">Завантажити тези (.docx)</label>
+        <input type="file" id="fileInput" class="form-control" accept=".docx,.pdf" aria-label="Оберіть файл для завантаження">
         <div id="uploadResult" class="mt-2"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
-        <button class="btn btn-primary" onclick="uploadFile()">
+        <button class="btn btn-primary" onclick="uploadFile()" title="Завантажити файл">
           <i class="bi bi-upload"></i> Завантажити
         </button>
       </div>
@@ -161,7 +156,6 @@
       localStorage.setItem("user", JSON.stringify(currentUser));
     }
     document.getElementById("userName").textContent = currentUser.full_name || currentUser.email;
-
     await loadConferences();
     await loadSections();
     await loadSubmissions();
@@ -185,9 +179,9 @@
   async function loadSubmissions() {
     const tbody = document.getElementById("submissionsTable");
     try {
-      const submissions = await api.getSubmissions({ author_id: currentUser.id });
+      const submissions = await api.getSubmissions();
       if (!submissions.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Заявок ще немає</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Заявок ще немає</td></tr>`;
         return;
       }
       tbody.innerHTML = submissions.map(s => {
@@ -203,15 +197,14 @@
             <td><span class="badge bg-${st.cls}">${st.label}</span></td>
             <td><small>${new Date(s.created_at).toLocaleDateString("uk-UA")}</small></td>
             <td>
-              <button class="btn btn-outline-secondary btn-sm" onclick="openFiles('${s.id}')">
+              <button class="btn btn-outline-secondary btn-sm" onclick="openFiles('${s.id}')" title="Файли заявки">
                 <i class="bi bi-paperclip"></i>
               </button>
             </td>
-            <td></td>
           </tr>`;
       }).join("");
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">${e.message}</td></tr>`;
     }
   }
 
@@ -222,16 +215,19 @@
     div.className = "row g-2 mb-2 author-row";
     div.innerHTML = `
       <div class="col-md-4">
-        <input type="text" class="form-control form-control-sm author-name" placeholder="Прізвище І.О.">
+        <label class="visually-hidden">Прізвище та ініціали</label>
+        <input type="text" class="form-control form-control-sm author-name" placeholder="Прізвище І.О." title="Прізвище та ініціали автора">
       </div>
       <div class="col-md-4">
-        <input type="text" class="form-control form-control-sm author-org" placeholder="Організація">
+        <label class="visually-hidden">Організація</label>
+        <input type="text" class="form-control form-control-sm author-org" placeholder="Організація" title="Організація автора">
       </div>
       <div class="col-md-3">
-        <input type="email" class="form-control form-control-sm author-email" placeholder="Email">
+        <label class="visually-hidden">Email</label>
+        <input type="email" class="form-control form-control-sm author-email" placeholder="Email" title="Email автора">
       </div>
       <div class="col-md-1">
-        <button class="btn btn-outline-danger btn-sm" onclick="this.closest('.author-row').remove()">
+        <button class="btn btn-outline-danger btn-sm" title="Видалити автора" onclick="this.closest('.author-row').remove()">
           <i class="bi bi-trash"></i>
         </button>
       </div>`;
@@ -301,7 +297,7 @@
             <span class="ms-2">${f.original_name}</span>
             <small class="text-muted ms-2">${(f.size_bytes / 1024).toFixed(1)} KB</small>
           </div>
-          <button class="btn btn-outline-danger btn-sm" onclick="removeFile('${f.id}')">
+          <button class="btn btn-outline-danger btn-sm" title="Видалити файл" onclick="removeFile('${f.id}')">
             <i class="bi bi-trash"></i>
           </button>
         </div>`).join("");
