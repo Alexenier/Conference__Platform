@@ -15,30 +15,21 @@
     <div class="col-md-5">
 
       <div class="text-center mb-4">
-        <h2 class="fw-bold">Conference Platform</h2>
+        <i class="bi bi-journal-richtext text-primary" style="font-size: 3rem;"></i>
+        <h2 class="fw-bold mt-2">Conference Platform</h2>
         <p class="text-muted">Платформа управління науковими конференціями</p>
       </div>
 
-      <!-- Tabs -->
-      <ul class="nav nav-tabs mb-3" id="authTabs">
-        <li class="nav-item">
-          <button class="nav-link active" onclick="showTab('login')">Вхід</button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" onclick="showTab('register')">Реєстрація</button>
-        </li>
-      </ul>
-
-      <!-- Login -->
-      <div id="loginTab" class="card shadow-sm">
+      <div class="card shadow-sm">
         <div class="card-body p-4">
+          <h5 class="card-title mb-4">Вхід до системи</h5>
           <div id="loginError" class="alert alert-danger d-none"></div>
           <div class="mb-3">
-            <label class="form-label">Email</label>
+            <label for="loginEmail" class="form-label">Email</label>
             <input type="email" id="loginEmail" class="form-control" placeholder="your@email.com">
           </div>
           <div class="mb-3">
-            <label class="form-label">Пароль</label>
+            <label for="loginPassword" class="form-label">Пароль</label>
             <input type="password" id="loginPassword" class="form-control" placeholder="••••••••">
           </div>
           <button class="btn btn-primary w-100" onclick="doLogin()">
@@ -47,28 +38,9 @@
         </div>
       </div>
 
-      <!-- Register -->
-      <div id="registerTab" class="card shadow-sm d-none">
-        <div class="card-body p-4">
-          <div id="registerError" class="alert alert-danger d-none"></div>
-          <div id="registerSuccess" class="alert alert-success d-none"></div>
-          <div class="mb-3">
-            <label class="form-label">Повне ім'я</label>
-            <input type="text" id="regName" class="form-control" placeholder="Іванов Іван Іванович">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" id="regEmail" class="form-control" placeholder="your@email.com">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Пароль</label>
-            <input type="password" id="regPassword" class="form-control" placeholder="••••••••">
-          </div>
-          <button class="btn btn-success w-100" onclick="doRegister()">
-            <i class="bi bi-person-plus"></i> Зареєструватися
-          </button>
-        </div>
-      </div>
+      <p class="text-center text-muted mt-3" style="font-size: 0.85rem;">
+        Доступ надається адміністратором системи
+      </p>
 
     </div>
   </div>
@@ -79,16 +51,7 @@
 <script src="js/auth.js"></script>
 <script src="js/router.js"></script>
 <script>
-  // если уже залогинен — редиректим
   if (auth.isLoggedIn()) redirectByRole();
-
-  function showTab(tab) {
-    document.getElementById("loginTab").classList.toggle("d-none", tab !== "login");
-    document.getElementById("registerTab").classList.toggle("d-none", tab !== "register");
-    document.querySelectorAll("#authTabs .nav-link").forEach((el, i) => {
-      el.classList.toggle("active", (i === 0 && tab === "login") || (i === 1 && tab === "register"));
-    });
-  }
 
   async function doLogin() {
     const email = document.getElementById("loginEmail").value.trim();
@@ -106,25 +69,9 @@
     }
   }
 
-  async function doRegister() {
-    const full_name = document.getElementById("regName").value.trim();
-    const email = document.getElementById("regEmail").value.trim();
-    const password = document.getElementById("regPassword").value;
-    const errEl = document.getElementById("registerError");
-    const okEl = document.getElementById("registerSuccess");
-    errEl.classList.add("d-none");
-    okEl.classList.add("d-none");
-
-    try {
-      await api.register({ full_name, email, password });
-      okEl.textContent = "Реєстрація успішна! Тепер увійдіть.";
-      okEl.classList.remove("d-none");
-      showTab("login");
-    } catch (e) {
-      errEl.textContent = e.message;
-      errEl.classList.remove("d-none");
-    }
-  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doLogin();
+  });
 </script>
 </body>
 </html>

@@ -20,8 +20,8 @@ async function request(method, path, body = null, auth = true) {
   }
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ detail: "Неизвестная ошибка" }));
-    throw new Error(err.detail || "Ошибка запроса");
+    const err = await response.json().catch(() => ({ detail: "Невідома помилка" }));
+    throw new Error(err.detail || "Помилка запиту");
   }
 
   if (response.status === 204) return null;
@@ -30,7 +30,6 @@ async function request(method, path, body = null, auth = true) {
 
 const api = {
   // Auth
-  register: (data) => request("POST", "/auth/register", data, false),
   login: (data) => request("POST", "/auth/login", data, false),
   me: () => request("GET", "/auth/me"),
 
@@ -64,7 +63,7 @@ const api = {
       body: formData,
     });
     if (!response.ok) {
-      const err = await response.json().catch(() => ({ detail: "Ошибка загрузки" }));
+      const err = await response.json().catch(() => ({ detail: "Помилка завантаження" }));
       throw new Error(err.detail);
     }
     return response.json();
@@ -75,4 +74,9 @@ const api = {
   getUserRoles: (userId) => request("GET", `/roles/users/${userId}`),
   assignRole: (userId, roleId) => request("POST", "/roles/assign", { user_id: userId, role_id: roleId }),
   revokeRole: (userId, roleId) => request("POST", "/roles/revoke", { user_id: userId, role_id: roleId }),
+
+  // Admin
+  getUsers: () => request("GET", "/admin/users"),
+  createUser: (data) => request("POST", "/admin/users", data),
+  deleteUser: (userId) => request("DELETE", `/admin/users/${userId}`),
 };
