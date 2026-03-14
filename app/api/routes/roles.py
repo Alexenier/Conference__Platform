@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.role import RoleResponse, UserRoleAssign, UserRolesResponse
 from app.services import role_service
-from app.api.deps import require_admin
+from app.api.deps import require_admin, get_current_user, get_user_roles as _get_user_role_ids
+from app.models.user import User
 
 router = APIRouter(prefix="/roles", tags=["roles"])
 
@@ -19,8 +20,12 @@ def list_roles(db: Session = Depends(get_db)):
 def get_user_roles(
     user_id: uuid.UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    current_user: User = Depends(get_current_user),
 ):
+    user_role_ids = _get_user_role_ids(db, current_user.id)
+    if current_user.id != user_id and 3 not in user_role_ids:
+        raise HTTPException(status_code=403, detail="Недостатньо прав")
+
     roles = role_service.get_user_roles(db, user_id)
     return UserRolesResponse(user_id=user_id, roles=roles)
 

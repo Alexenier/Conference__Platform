@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Орг. комітет — Conference Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../css/main.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+  <div class="container">
+    <span class="navbar-brand"><i class="bi bi-journal-richtext"></i> Conference Platform</span>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <span class="text-white" id="userName"></span>
+      <button class="btn btn-outline-light btn-sm" onclick="auth.logout()" title="Вийти">
+        <i class="bi bi-box-arrow-right"></i> Вийти
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+
+  <!-- Фільтри -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label for="filterConference" class="form-label">Конференція</label>
+          <select id="filterConference" class="form-select" aria-label="Фільтр по конференції" onchange="loadSubmissions()">
+            <option value="">Всі конференції</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="filterStatus" class="form-label">Статус</label>
+          <select id="filterStatus" class="form-select" aria-label="Фільтр по статусу" onchange="loadSubmissions()">
+            <option value="">Всі статуси</option>
+            <option value="draft">Чернетка</option>
+            <option value="submitted">Подано</option>
+            <option value="under_review">На розгляді</option>
+            <option value="accepted">Прийнято</option>
+            <option value="rejected">Відхилено</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="filterSection" class="form-label">Секція</label>
+          <select id="filterSection" class="form-select" aria-label="Фільтр по секції" onchange="loadSubmissions()">
+            <option value="">Всі секції</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" onclick="resetFilters()" title="Скинути фільтри">
+            <i class="bi bi-arrow-counterclockwise"></i> Скинути
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Заявки <span id="submissionsCount" class="text-muted fs-6"></span></h5>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm" onclick="downloadProgram()" title="Завантажити програму">
+        <i class="bi bi-file-earmark-pdf"></i> Програма
+      </button>
+    </div>
+  </div>
+
+  <div id="pageAlert" class="alert d-none"></div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Доповідь</th>
+            <th>Секція</th>
+            <th>Конференція</th>
+            <th>Статус</th>
+            <th>Дата</th>
+            <th>Дії</th>
+          </tr>
+        </thead>
+        <tbody id="submissionsTable">
+          <tr><td colspan="6" class="text-center text-muted py-4">Завантаження...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Деталі заявки -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailModalLabel">Деталі заявки</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+      </div>
+      <div class="modal-body" id="detailModalBody">
+      </div>
+      <div class="modal-footer" id="detailModalFooter">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  auth.requireAuth();
+
+  const STATUS_LABELS = {
+    draft:        { label: "Чернетка",    cls: "secondary" },
+    submitted:    { label: "Подано",      cls: "primary" },
+    under_review: { label: "На розгляді", cls: "warning" },
+    accepted:     { label: "Прийнято",    cls: "success" },
+    rejected:     { label: "Відхилено",   cls: "danger" },
+  };
+
+  const STATUS_TRANSITIONS = {
+    draft:        [],
+    submitted:    ["under_review", "draft"],
+    under_review: ["accepted", "rejected"],
+    accepted:     [],
+    rejected:     ["draft"],
+  };
+
+  const STATUS_TRANSITION_LABELS = {
+    under_review: "Взяти на розгляд",
+    accepted:     "Прийняти",
+    rejected:     "Відхилити",
+    draft:        "Повернути в чернетку",
+  };
+
+  let allConferences = [];
+  let currentSubmission = null;
+
+  async function init() {
+    const user = auth.getUser() || await api.me();
+    document.getElementById("userName").textContent = user.full_name || user.email;
+    await loadConferences();
+    await loadSections();
+    await loadSubmissions();
+  }
+
+  async function loadConferences() {
+    try {
+      allConferences = await api.getConferences();
+      const sel = document.getElementById("filterConference");
+      allConferences.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.title;
+        sel.appendChild(opt);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function loadSections() {
+    try {
+      const data = await api.getSections();
+      const sel = document.getElementById("filterSection");
+      data.sections.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        sel.appendChild(opt);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function loadSubmissions() {
+    const tbody = document.getElementById("submissionsTable");
+    const params = {};
+    const conf = document.getElementById("filterConference").value;
+    const status = document.getElementById("filterStatus").value;
+    const section = document.getElementById("filterSection").value;
+    if (conf) params.conference_id = conf;
+    if (status) params.status = status;
+    if (section) params.section = section;
+
+    try {
+      const submissions = await api.getSubmissions(params);
+      document.getElementById("submissionsCount").textContent = `(${submissions.length})`;
+
+      if (!submissions.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Заявок не знайдено</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = submissions.map(s => {
+        const st = STATUS_LABELS[s.status] || { label: s.status, cls: "secondary" };
+        const authors = s.authors.map(a => a.full_name).join(", ") || "—";
+        const conf = allConferences.find(c => c.id === s.conference_id);
+        const confTitle = conf ? conf.title : "—";
+        const transitions = STATUS_TRANSITIONS[s.status] || [];
+
+        return `
+          <tr>
+            <td>
+              <div class="fw-semibold">${s.title}</div>
+              <small class="text-muted">${authors}</small>
+            </td>
+            <td><small>${s.section || "—"}</small></td>
+            <td><small>${confTitle}</small></td>
+            <td><span class="badge bg-${st.cls}">${st.label}</span></td>
+            <td><small>${new Date(s.created_at).toLocaleDateString("uk-UA")}</small></td>
+            <td>
+              <button class="btn btn-outline-secondary btn-sm" title="Переглянути деталі" onclick="openDetail('${s.id}')">
+                <i class="bi bi-eye"></i>
+              </button>
+            </td>
+          </tr>`;
+      }).join("");
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${e.message}</td></tr>`;
+    }
+  }
+
+  async function openDetail(submissionId) {
+    try {
+      const submissions = await api.getSubmissions();
+      const s = submissions.find(x => x.id === submissionId);
+      if (!s) return;
+      currentSubmission = s;
+
+      const st = STATUS_LABELS[s.status] || { label: s.status, cls: "secondary" };
+      const conf = allConferences.find(c => c.id === s.conference_id);
+      const authors = s.authors.map(a => `
+        <div class="d-flex gap-3 mb-1">
+          <span class="fw-semibold">${a.full_name}</span>
+          <span class="text-muted">${a.organization || ""}</span>
+          <span class="text-muted">${a.email || ""}</span>
+          ${a.is_presenter ? '<span class="badge bg-primary">Доповідач</span>' : ""}
+        </div>`).join("") || "—";
+
+      const files = await api.getFiles(submissionId);
+      const filesList = files.length ? files.map(f => `
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <i class="bi bi-file-earmark-word text-primary"></i>
+          <span>${f.original_name}</span>
+          <small class="text-muted">${(f.size_bytes / 1024).toFixed(1)} KB</small>
+        </div>`).join("") : '<p class="text-muted">Файлів немає</p>';
+
+      document.getElementById("detailModalLabel").textContent = s.title;
+      document.getElementById("detailModalBody").innerHTML = `
+        <div class="mb-3">
+          <span class="badge bg-${st.cls} mb-2">${st.label}</span>
+          <p class="text-muted mb-1"><strong>Конференція:</strong> ${conf ? conf.title : "—"}</p>
+          <p class="text-muted mb-1"><strong>Секція:</strong> ${s.section || "—"}</p>
+          <p class="text-muted mb-0"><strong>Дата подачі:</strong> ${new Date(s.created_at).toLocaleDateString("uk-UA")}</p>
+        </div>
+        ${s.abstract ? `<div class="mb-3"><strong>Анотація:</strong><p class="text-muted mt-1">${s.abstract}</p></div>` : ""}
+        <div class="mb-3"><strong>Автори:</strong><div class="mt-1">${authors}</div></div>
+        <div><strong>Файли:</strong><div class="mt-1">${filesList}</div></div>
+      `;
+
+      const transitions = STATUS_TRANSITIONS[s.status] || [];
+      const footer = document.getElementById("detailModalFooter");
+      footer.innerHTML = `<button class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>`;
+      transitions.forEach(newStatus => {
+        const label = STATUS_TRANSITION_LABELS[newStatus] || newStatus;
+        const cls = newStatus === "accepted" ? "success" : newStatus === "rejected" ? "danger" : "primary";
+        footer.innerHTML += `
+          <button class="btn btn-${cls}" onclick="changeStatus('${s.id}', '${newStatus}')" title="${label}">
+            ${label}
+          </button>`;
+      });
+
+      new bootstrap.Modal(document.getElementById("detailModal")).show();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function changeStatus(submissionId, newStatus) {
+    try {
+      await api.updateStatus(submissionId, newStatus);
+      bootstrap.Modal.getInstance(document.getElementById("detailModal")).hide();
+      await loadSubmissions();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  function resetFilters() {
+    document.getElementById("filterConference").value = "";
+    document.getElementById("filterStatus").value = "";
+    document.getElementById("filterSection").value = "";
+    loadSubmissions();
+  }
+
+  function downloadProgram() {
+    const confId = document.getElementById("filterConference").value;
+    if (!confId) {
+      alert("Оберіть конференцію для завантаження програми");
+      return;
+    }
+    window.open(api.downloadProgram(confId), "_blank");
+  }
+
+  init();
+</script>
+</body>
+</html>
