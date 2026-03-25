@@ -7,7 +7,7 @@ from app.schemas.submission import (
     SubmissionCreate, SubmissionResponse, SubmissionStatusUpdate, VALID_SECTIONS
 )
 from app.services import submission_service
-from app.api.deps import get_current_user, require_org_committee, require_participant
+from app.api.deps import get_current_user, require_org_committee, require_participant, get_user_roles
 from app.models.user import User
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
@@ -40,7 +40,8 @@ def list_submissions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return submission_service.list_submissions(db, conference_id, status, section)
+    role_ids = get_user_roles(db, current_user.id)
+    return submission_service.list_submissions(db, conference_id, status, section, current_user.id, role_ids)
 
 
 @router.get("/{submission_id}", response_model=SubmissionResponse)

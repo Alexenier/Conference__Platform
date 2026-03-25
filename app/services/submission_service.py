@@ -57,8 +57,15 @@ def list_submissions(
     conference_id: uuid.UUID | None = None,
     status: str | None = None,
     section: str | None = None,
+    current_user_id=None,
+    role_ids: list[int] = [],
 ) -> list[Submission]:
     q = db.query(Submission).options(joinedload(Submission.authors))
+
+    # Тільки participant (1) — бачить лише свої заявки
+    if current_user_id and 2 not in role_ids and 3 not in role_ids:
+        q = q.filter(Submission.author_id == current_user_id)
+
     if conference_id:
         q = q.filter(Submission.conference_id == conference_id)
     if status:
