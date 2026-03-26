@@ -16,7 +16,6 @@ def upload_submission_file(
 ) -> SubmissionFile:
     ensure_bucket_exists(settings.s3_bucket)
 
-    # читаем байты для валидации и загрузки
     file_bytes = fileobj.read()
 
     import io
@@ -48,6 +47,10 @@ def get_submission_files(db: Session, submission_id: uuid.UUID) -> list[Submissi
     )
 
 
+def get_submission_file(db: Session, file_id: uuid.UUID) -> SubmissionFile | None:
+    return db.query(SubmissionFile).filter(SubmissionFile.id == file_id).first()
+
+
 def delete_submission_file(db: Session, file_id: uuid.UUID) -> None:
     from app.services.storage import delete_file
     record = db.query(SubmissionFile).filter(SubmissionFile.id == file_id).first()
@@ -57,7 +60,7 @@ def delete_submission_file(db: Session, file_id: uuid.UUID) -> None:
     try:
         delete_file(record.bucket, record.object_key)
     except Exception:
-        pass  # если в MinIO уже нет — всё равно удаляем из БД
+        pass
 
     db.delete(record)
     db.commit()

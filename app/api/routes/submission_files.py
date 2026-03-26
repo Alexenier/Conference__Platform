@@ -1,9 +1,16 @@
 import uuid
+import io
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.services.submission_file_service import upload_submission_file, get_submission_files
+from app.services.submission_file_service import (
+    upload_submission_file,
+    get_submission_files,
+    get_submission_file,
+)
+from app.services.storage import download_file
 from app.services.validation_service import validate_and_save, get_report
 from app.api.deps import get_current_user
 
@@ -74,6 +81,25 @@ def list_files(
     ]
 
 
+@router.get("/{file_id}/download")
+def download_file_endpoint(
+    submission_id: uuid.UUID,
+    file_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    file_record = get_submission_file(db, file_id)
+    if not file_record:
+        raise HTTPException(status_code=404, detail="Файл не знайдено")
+
+    file_bytes = download_file(file_record.bucket, file_record.object_key)
+    return StreamingResponse(
+        io.BytesIO(file_bytes),
+        media_type=file_record.content_type or "application/octet-stream",
+        headers={"Content-Disposition": f"attachment; filename={file_record.original_name}"}
+    )
+
+
 @router.get("/{file_id}/validation")
 def get_validation(
     submission_id: uuid.UUID,
@@ -85,6 +111,7 @@ def get_validation(
     if not report:
         raise HTTPException(status_code=404, detail="Отчёт валидации не найден")
     return {"ok": report.ok, "issues": report.issues, "created_at": report.created_at}
+
 
 @router.delete("/{file_id}")
 def delete_file(
