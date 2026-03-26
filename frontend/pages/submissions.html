@@ -149,6 +149,16 @@
     rejected: { label: "Відхилено", cls: "danger" },
   };
 
+  async function submitSubmission(submissionId) {
+  if (!confirm("Подати заявку на розгляд?")) return;
+  try {
+    await api.updateStatus(submissionId, "submitted");
+    await loadSubmissions();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
   async function init() {
     currentUser = auth.getUser();
     if (!currentUser) {
@@ -197,9 +207,13 @@
             <td><span class="badge bg-${st.cls}">${st.label}</span></td>
             <td><small>${new Date(s.created_at).toLocaleDateString("uk-UA")}</small></td>
             <td>
-              <button class="btn btn-outline-secondary btn-sm" onclick="openFiles('${s.id}')" title="Файли заявки">
-                <i class="bi bi-paperclip"></i>
-              </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="openFiles('${s.id}')" title="Файли заявки">
+                 <i class="bi bi-paperclip"></i>
+                </button>
+                ${s.status === 'draft' ? `
+                <button class="btn btn-outline-primary btn-sm ms-1" onclick="submitSubmission('${s.id}')" title="Подати заявку">
+                  <i class="bi bi-send"></i>
+                </button>` : ''}
             </td>
           </tr>`;
       }).join("");
