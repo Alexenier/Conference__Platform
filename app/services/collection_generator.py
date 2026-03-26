@@ -8,12 +8,23 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.lib.enums import TA_CENTER
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 from app.models.submission import Submission
 from app.models.submission_file import SubmissionFile
 from app.models.conference import Conference
 from app.services.storage import download_file
 from app.schemas.submission import VALID_SECTIONS
+
+
+def _register_fonts():
+    try:
+        pdfmetrics.registerFont(TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
+        pdfmetrics.registerFont(TTFont("DejaVu-Bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"))
+        return "DejaVu", "DejaVu-Bold"
+    except Exception:
+        return "Helvetica", "Helvetica-Bold"
 
 
 def generate_collection_pdf(db: Session, conference_id: uuid.UUID) -> bytes:
@@ -36,11 +47,9 @@ def generate_collection_pdf(db: Session, conference_id: uuid.UUID) -> bytes:
 
     merger = PdfMerger()
 
-    # Титульная страница
     title_pdf = _make_title_page(conference)
     merger.append(io.BytesIO(title_pdf))
 
-    # Группируем по секциям
     by_section: dict[str, list[Submission]] = {}
     no_section: list[Submission] = []
     for s in submissions:
@@ -58,12 +67,10 @@ def generate_collection_pdf(db: Session, conference_id: uuid.UUID) -> bytes:
         if not section_submissions:
             continue
 
-        # Страница-разделитель секции
         section_pdf = _make_section_page(section_name)
         merger.append(io.BytesIO(section_pdf))
 
         for sub in section_submissions:
-            # Берём последний загруженный .docx файл
             file_record = (
                 db.query(SubmissionFile)
                 .filter(
@@ -90,6 +97,7 @@ def generate_collection_pdf(db: Session, conference_id: uuid.UUID) -> bytes:
 
 
 def _make_title_page(conference: Conference) -> bytes:
+    font_normal, font_bold = _register_fonts()
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=A4,
@@ -99,12 +107,12 @@ def _make_title_page(conference: Conference) -> bytes:
     styles = getSampleStyleSheet()
     style_title = ParagraphStyle(
         "t", parent=styles["Normal"],
-        fontSize=18, fontName="Helvetica-Bold",
+        fontSize=18, fontName=font_bold,
         alignment=TA_CENTER, spaceAfter=10,
     )
     style_sub = ParagraphStyle(
         "s", parent=styles["Normal"],
-        fontSize=13, fontName="Helvetica",
+        fontSize=13, fontName=font_normal,
         alignment=TA_CENTER, spaceAfter=6,
     )
     story = [
@@ -122,6 +130,7 @@ def _make_title_page(conference: Conference) -> bytes:
 
 
 def _make_section_page(section_name: str) -> bytes:
+    font_normal, font_bold = _register_fonts()
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=A4,
@@ -131,12 +140,12 @@ def _make_section_page(section_name: str) -> bytes:
     styles = getSampleStyleSheet()
     style = ParagraphStyle(
         "sec", parent=styles["Normal"],
-        fontSize=15, fontName="Helvetica-Bold",
+        fontSize=15, fontName=font_bold,
         alignment=TA_CENTER,
     )
     story = [
         Spacer(1, 30 * mm),
-        Paragraph(f"СЕКЦІЯ", style),
+        Paragraph("СЕКЦІЯ", style),
         Spacer(1, 5 * mm),
         Paragraph(section_name.upper(), style),
     ]
