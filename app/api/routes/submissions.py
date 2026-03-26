@@ -61,11 +61,26 @@ def update_status(
     submission_id: uuid.UUID,
     payload: SubmissionStatusUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_org_committee),
+    current_user: User = Depends(get_current_user),
 ):
     submission = submission_service.get_submission(db, submission_id)
     if not submission:
         raise HTTPException(status_code=404, detail="Submission не найден")
+
+    role_ids = get_user_roles(db, current_user.id)
+    is_participant_only = 1 in role_ids and 2 not in role_ids and 3 not in role_ids
+
+    # Учасник може тільки подати свою заявку (draft → submitted)
+    if is_participant_only:
+        if submission.author_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Недостатньо прав")
+        if payload.status != "submitted":
+            raise HTTPException(status_code=403, detail="Учасник може лише подати заявку")
+
+    # Орг. комітет і адмін — будь-який перехід
+    elif 2 not in role_ids and 3 not in role_ids:
+        raise HTTPException(status_code=403, detail="Недостатньо прав")
+
     try:
         return submission_service.update_status(db, submission, payload.status)
     except ValueError as e:
