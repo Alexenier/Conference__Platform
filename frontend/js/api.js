@@ -53,6 +53,7 @@ const api = {
   // Submission files
   getFiles: (submissionId) => request("GET", `/submissions/${submissionId}/files/`),
   deleteFile: (submissionId, fileId) => request("DELETE", `/submissions/${submissionId}/files/${fileId}`),
+  downloadFile: (submissionId, fileId) => `${API_BASE}/submissions/${submissionId}/files/${fileId}/download`,
   uploadFile: async (submissionId, file) => {
     const token = localStorage.getItem("token");
     const formData = new FormData();
