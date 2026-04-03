@@ -17,11 +17,13 @@ from app.schemas.submission import VALID_SECTIONS
 
 def _register_fonts():
     try:
-        pdfmetrics.registerFont(TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
-        pdfmetrics.registerFont(TTFont("DejaVu-Bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"))
-        pdfmetrics.registerFont(TTFont("DejaVu-Italic", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"))
+        if "DejaVu" not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
+            pdfmetrics.registerFont(TTFont("DejaVu-Bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"))
+            pdfmetrics.registerFont(TTFont("DejaVu-Italic", "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"))
         return "DejaVu", "DejaVu-Bold", "DejaVu-Italic"
-    except Exception:
+    except Exception as e:
+        print(f"[fonts] fallback to Helvetica: {e}")
         return "Helvetica", "Helvetica-Bold", "Helvetica-Oblique"
 
 
@@ -91,7 +93,8 @@ def generate_program_pdf(db: Session, conference_id: uuid.UUID) -> bytes:
     story.append(Spacer(1, 10 * mm))
 
     if not submissions:
-        story.append(Paragraph("Прийнятих доповідей не знайдено.", styles["Normal"]))
+        style_normal = ParagraphStyle("normal_cyr", parent=styles["Normal"], fontName=font_normal)
+        story.append(Paragraph("Прийнятих доповідей не знайдено.", style_normal))
     else:
         by_section: dict[str, list[Submission]] = {}
         no_section: list[Submission] = []
