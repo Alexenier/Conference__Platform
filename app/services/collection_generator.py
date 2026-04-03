@@ -20,10 +20,12 @@ from app.schemas.submission import VALID_SECTIONS
 
 def _register_fonts():
     try:
-        pdfmetrics.registerFont(TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
-        pdfmetrics.registerFont(TTFont("DejaVu-Bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"))
+        if "DejaVu" not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
+            pdfmetrics.registerFont(TTFont("DejaVu-Bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"))
         return "DejaVu", "DejaVu-Bold"
-    except Exception:
+    except Exception as e:
+        print(f"[fonts] fallback to Helvetica: {e}")
         return "Helvetica", "Helvetica-Bold"
 
 
