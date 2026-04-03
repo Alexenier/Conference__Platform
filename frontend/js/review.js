@@ -191,13 +191,26 @@ function resetFilters() {
   loadSubmissions();
 }
 
-function downloadProgram() {
+async function downloadProgram() {
   const confId = document.getElementById("filterConference").value;
   if (!confId) {
     alert("Оберіть конференцію для завантаження програми");
     return;
   }
-  window.open(api.downloadProgram(confId), "_blank");
+  const token = localStorage.getItem("token");
+  const response = await fetch(api.downloadProgram(confId), {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    alert("Помилка завантаження програми");
+    return;
+  }
+  const blob = await response.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `програма.pdf`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 async function downloadFile(submissionId, fileId, fileName) {
