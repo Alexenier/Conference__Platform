@@ -7,11 +7,11 @@ async function redirectByRole() {
     auth.saveSession(auth.getToken(), user);
 
     if (roleIds.includes(3)) {
-      window.location.href = "/frontend/pages/admin.html";
+      window.location.href = "/pages/admin.html";
     } else if (roleIds.includes(2)) {
-      window.location.href = "/frontend/pages/review.html";
+      window.location.href = "/pages/review.html";
     } else {
-      window.location.href = "/frontend/pages/submissions.html";
+      window.location.href = "/pages/submissions.html";
     }
   } catch (e) {
     auth.logout();

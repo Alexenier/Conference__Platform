@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost:8000";
+// const API_BASE = "http://localhost:8000";
+const API_BASE = "/api";
 
 async function request(method, path, body = null, auth = true) {
   const headers = { "Content-Type": "application/json" };
@@ -15,7 +16,8 @@ async function request(method, path, body = null, auth = true) {
   if (response.status === 401) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "/frontend/index.html";
+    // window.location.href = "/frontend/index.html";
+    window.location.href = "/index.html";
     return;
   }
 
