@@ -169,6 +169,40 @@
   </div>
 </div>
 
+<!-- Modal: Редагувати конференцію -->
+<div class="modal fade" id="editConferenceModal" tabindex="-1" aria-labelledby="editConferenceModalLabel" aria-modal="true" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editConferenceModalLabel"><i class="bi bi-pencil"></i> Редагувати конференцію</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editConfId">
+        <div id="editConfError" class="alert alert-danger d-none"></div>
+        <div class="mb-3">
+          <label for="editConfTitle" class="form-label">Назва конференції</label>
+          <input type="text" id="editConfTitle" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label for="editConfDescription" class="form-label">Опис</label>
+          <textarea id="editConfDescription" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="editConfDeadline" class="form-label">Дедлайн подачі тез</label>
+          <input type="datetime-local" id="editConfDeadline" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+        <button class="btn btn-primary" onclick="saveEditConference()" title="Зберегти зміни">
+          <i class="bi bi-check-lg"></i> Зберегти
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>

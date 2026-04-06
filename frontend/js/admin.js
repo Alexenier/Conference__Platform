@@ -116,6 +116,9 @@ async function loadConferences() {
           <button class="btn btn-outline-primary btn-sm" title="Завантажити збірник" onclick="downloadPdf('collection', '${c.id}', '${c.title}')">
             <i class="bi bi-book"></i>
           </button>
+          <button class="btn btn-outline-warning btn-sm" title="Редагувати конференцію" onclick="openEditConference('${c.id}', '${c.title}', '${c.description || ""}', '${c.submission_deadline}')">
+            <i class="bi bi-pencil"></i>
+          </button>
           <button class="btn btn-outline-danger btn-sm" title="Видалити конференцію" onclick="deleteConference('${c.id}', '${c.title}')">
             <i class="bi bi-trash"></i>
           </button>
@@ -178,6 +181,44 @@ async function createConference() {
     document.getElementById("confTitle").value = "";
     document.getElementById("confDescription").value = "";
     document.getElementById("confDeadline").value = "";
+    await loadConferences();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove("d-none");
+  }
+}
+
+function openEditConference(id, title, description, deadline) {
+  document.getElementById("editConfId").value = id;
+  document.getElementById("editConfTitle").value = title;
+  document.getElementById("editConfDescription").value = description;
+  document.getElementById("editConfDeadline").value = deadline.slice(0, 16);
+  document.getElementById("editConfError").classList.add("d-none");
+  new bootstrap.Modal(document.getElementById("editConferenceModal")).show();
+}
+
+async function saveEditConference() {
+  const errEl = document.getElementById("editConfError");
+  errEl.classList.add("d-none");
+
+  const id = document.getElementById("editConfId").value;
+  const title = document.getElementById("editConfTitle").value.trim();
+  const description = document.getElementById("editConfDescription").value.trim();
+  const deadline = document.getElementById("editConfDeadline").value;
+
+  if (!title || !deadline) {
+    errEl.textContent = "Назва та дедлайн обов'язкові";
+    errEl.classList.remove("d-none");
+    return;
+  }
+
+  try {
+    await api.updateConference(id, {
+      title,
+      description: description || null,
+      submission_deadline: new Date(deadline).toISOString(),
+    });
+    bootstrap.Modal.getInstance(document.getElementById("editConferenceModal")).hide();
     await loadConferences();
   } catch (e) {
     errEl.textContent = e.message;
