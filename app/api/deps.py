@@ -1,3 +1,4 @@
+import uuid as uuid_lib
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -21,7 +22,14 @@ def get_current_user(
             detail="Недействительный токен",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    user = db.query(User).filter(User.id == payload.get("sub")).first()
+    try:
+        user_id = uuid_lib.UUID(payload.get("sub"))
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Недействительный токен",
+        )
+    user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -58,5 +66,5 @@ def require_roles(*role_ids: int):
 
 # Готовые dependency для использования в роутерах
 require_admin = require_roles(3)
-require_org_committee = require_roles(2, 3)  # org_committee или admin
-require_participant = require_roles(1, 2, 3)  # любой авторизованный с ролью
+require_org_committee = require_roles(2, 3)
+require_participant = require_roles(1, 2, 3)
