@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import auth, files, submission_files, submissions, conferences, roles, admin
+from app.api.routes import auth, files, submission_files, submissions, conferences, roles, admin, search
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
@@ -9,3 +9,4 @@ api_router.include_router(submission_files.router)
 api_router.include_router(submissions.router)
 api_router.include_router(conferences.router)
 api_router.include_router(admin.router)
+api_router.include_router(search.router)
