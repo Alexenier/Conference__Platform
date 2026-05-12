@@ -25,6 +25,7 @@ const STATUS_TRANSITION_LABELS = {
 
 let allConferences = [];
 let currentSubmission = null;
+let searchTimeout = null;
 
 async function init() {
   const user = auth.getUser() || await api.me();
@@ -32,6 +33,11 @@ async function init() {
   await loadConferences();
   await loadSections();
   await loadSubmissions();
+
+  document.getElementById("searchInput").addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadSubmissions(), 400);
+  });
 }
 
 async function loadConferences() {
@@ -66,16 +72,26 @@ async function loadSections() {
 
 async function loadSubmissions() {
   const tbody = document.getElementById("submissionsTable");
-  const params = {};
+  const searchQuery = document.getElementById("searchInput").value.trim();
   const conf = document.getElementById("filterConference").value;
   const status = document.getElementById("filterStatus").value;
   const section = document.getElementById("filterSection").value;
-  if (conf) params.conference_id = conf;
-  if (status) params.status = status;
-  if (section) params.section = section;
 
   try {
-    const submissions = await api.getSubmissions(params);
+    let submissions;
+
+    if (searchQuery) {
+      submissions = await api.searchSubmissions(searchQuery, conf || null);
+      if (status) submissions = submissions.filter(s => s.status === status);
+      if (section) submissions = submissions.filter(s => s.section === section);
+    } else {
+      const params = {};
+      if (conf) params.conference_id = conf;
+      if (status) params.status = status;
+      if (section) params.section = section;
+      submissions = await api.getSubmissions(params);
+    }
+
     document.getElementById("submissionsCount").textContent = `(${submissions.length})`;
 
     if (!submissions.length) {
@@ -188,6 +204,7 @@ function resetFilters() {
   document.getElementById("filterConference").value = "";
   document.getElementById("filterStatus").value = "";
   document.getElementById("filterSection").value = "";
+  document.getElementById("searchInput").value = "";
   loadSubmissions();
 }
 

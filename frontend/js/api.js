@@ -51,6 +51,11 @@ const api = {
   },
   createSubmission: (data) => request("POST", "/submissions/", data),
   updateStatus: (id, status) => request("PATCH", `/submissions/${id}/status`, { status }),
+  searchSubmissions: (q, conference_id = null) => {
+  const params = new URLSearchParams({ q });
+  if (conference_id) params.append("conference_id", conference_id);
+  return request("GET", `/search/submissions?${params.toString()}`);
+},
 
   // Submission files
   getFiles: (submissionId) => request("GET", `/submissions/${submissionId}/files/`),
