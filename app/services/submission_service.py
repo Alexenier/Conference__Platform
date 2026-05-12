@@ -40,6 +40,14 @@ def create_submission(db: Session, payload: SubmissionCreate) -> Submission:
 
     db.commit()
     db.refresh(submission)
+
+    # Індексуємо в Elasticsearch
+    try:
+        from app.services.search_service import index_submission
+        index_submission(submission)
+    except Exception as e:
+        print(f"[ES] Помилка індексації: {e}")
+
     return submission
 
 
@@ -62,7 +70,6 @@ def list_submissions(
 ) -> list[Submission]:
     q = db.query(Submission).options(joinedload(Submission.authors))
 
-    # Тільки participant (1) — бачить лише свої заявки
     if current_user_id and 2 not in role_ids and 3 not in role_ids:
         q = q.filter(Submission.author_id == current_user_id)
 
@@ -87,4 +94,12 @@ def update_status(db: Session, submission: Submission, new_status: str) -> Submi
 
     db.commit()
     db.refresh(submission)
+
+    # Оновлюємо індекс в Elasticsearch
+    try:
+        from app.services.search_service import index_submission
+        index_submission(submission)
+    except Exception as e:
+        print(f"[ES] Помилка оновлення індексу: {e}")
+
     return submission
