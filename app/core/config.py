@@ -13,10 +13,11 @@ class Settings(BaseSettings):
     s3_bucket: str
     s3_region: str = "us-east-1"
 
+    es_host: str = "http://elasticsearch:9200"
+
     secret_key: str = "change-me-in-production"
     access_token_expire_minutes: int = 60 * 24
 
-    # Первый админ — создаётся автоматически при старте
     admin_email: str = "admin@conference.com"
     admin_password: str = "admin123"
     admin_full_name: str = "Адміністратор"
