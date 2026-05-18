@@ -26,3 +26,11 @@ class ConferenceResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+class SectionMeta(BaseModel):
+    chairs: str = ""
+    secretary: str = ""
+    location: str = ""
+
+class ProgramRequest(BaseModel):
+    sections: dict[str, SectionMeta] = {}

@@ -70,7 +70,7 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Заявки <span id="submissionsCount" class="text-muted fs-6"></span></h5>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-primary btn-sm" onclick="downloadProgram()" title="Завантажити програму">
+      <button class="btn btn-outline-primary btn-sm" onclick="openProgramModal()" title="Завантажити програму">
         <i class="bi bi-file-earmark-pdf"></i> Програма
       </button>
     </div>
@@ -110,6 +110,28 @@
       </div>
       <div class="modal-body" id="detailModalBody"></div>
       <div class="modal-footer" id="detailModalFooter"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Програма конференції -->
+<div class="modal fade" id="programModal" tabindex="-1" aria-labelledby="programModalLabel" aria-modal="true" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="programModalLabel"><i class="bi bi-file-earmark-pdf"></i> Генерація програми конференції</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">Заповніть дані для кожної секції. Поля необов'язкові — можна залишити порожніми.</p>
+        <div id="sectionsForm"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+        <button class="btn btn-primary" onclick="generateProgram()">
+          <i class="bi bi-download"></i> Згенерувати PDF
+        </button>
+      </div>
     </div>
   </div>
 </div>

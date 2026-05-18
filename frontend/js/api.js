@@ -40,7 +40,7 @@ const api = {
   createConference: (data) => request("POST", "/conferences/", data),
   updateConference: (id, data) => request("PATCH", `/conferences/${id}`, data),
   deleteConference: (id) => request("DELETE", `/conferences/${id}`),
-  downloadProgram: (id) => `${API_BASE}/conferences/${id}/program.pdf`,
+  downloadProgram: (id, sectionsData) => request("POST", `/conferences/${id}/program.pdf`, { sections: sectionsData }),
   downloadCollection: (id) => `${API_BASE}/conferences/${id}/collection.pdf`,
 
   // Submissions

@@ -208,26 +208,87 @@ function resetFilters() {
   loadSubmissions();
 }
 
-async function downloadProgram() {
+const SECTIONS = [
+  "Інтелектуальні системи",
+  "Сучасні інформаційні технології",
+  "Методика викладання інформатики та ІКТ в освіті",
+  "Моделювання та інформаційні технології",
+];
+
+function openProgramModal() {
   const confId = document.getElementById("filterConference").value;
   if (!confId) {
     alert("Оберіть конференцію для завантаження програми");
     return;
   }
-  const token = localStorage.getItem("token");
-  const response = await fetch(api.downloadProgram(confId), {
-    headers: { "Authorization": `Bearer ${token}` }
-  });
-  if (!response.ok) {
-    alert("Помилка завантаження програми");
+
+  const form = document.getElementById("sectionsForm");
+  form.innerHTML = `
+    <div class="border rounded p-3 mb-3 bg-light">
+      <h6 class="fw-bold mb-2">Загальні дані</h6>
+      <div>
+        <label class="form-label small text-muted">Підзаголовок конференції</label>
+        <input type="text" class="form-control form-control-sm" id="conf_subtitle"
+          placeholder="Двадцять третя всеукраїнська конференція студентів і молодих науковців">
+      </div>
+    </div>
+  ` + SECTIONS.map((section, idx) => `
+    <div class="border rounded p-3 mb-3">
+      <h6 class="fw-bold mb-3">Секція ${idx + 1} – ${section}</h6>
+      <div class="mb-2">
+        <label class="form-label small text-muted">Головуючі (кожен з нового рядка, формат: посада Прізвище І. О.)</label>
+        <textarea class="form-control form-control-sm" id="chairs_${idx}" rows="4"
+          placeholder="к. ф-м. н., доцент Пенко Валерій Георгійович"></textarea>
+      </div>
+      <div class="mb-2">
+        <label class="form-label small text-muted">Секретар</label>
+        <input type="text" class="form-control form-control-sm" id="secretary_${idx}"
+          placeholder="ст. викладач Трубіна Наталія Федорівна">
+      </div>
+      <div>
+        <label class="form-label small text-muted">Місце проведення</label>
+        <input type="text" class="form-control form-control-sm" id="location_${idx}"
+          placeholder="ОНУ імені І. І. Мечнікова">
+      </div>
+    </div>
+  `).join("");
+
+  new bootstrap.Modal(document.getElementById("programModal")).show();
+}
+
+async function generateProgram() {
+  const confId = document.getElementById("filterConference").value;
+  if (!confId) {
+    alert("Оберіть конференцію");
     return;
   }
-  const blob = await response.blob();
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `програма.pdf`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+
+  // Закриваємо модальне вікно якщо відкрите
+  const modal = bootstrap.Modal.getInstance(document.getElementById("programModal"));
+  if (modal) modal.hide();
+
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`/api/conferences/${confId}/program.pdf`, {
+      method: "GET",                                    // ← було POST
+      headers: { "Authorization": `Bearer ${token}` },
+      // body прибрали
+    });
+
+    if (!response.ok) {
+      alert("Помилка генерації програми");
+      return;
+    }
+
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `програма.pdf`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) {
+    alert(e.message);
+  }
 }
 
 async function downloadFile(submissionId, fileId, fileName) {

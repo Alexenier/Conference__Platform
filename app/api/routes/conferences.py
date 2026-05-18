@@ -9,6 +9,8 @@ from app.schemas.conference import ConferenceCreate, ConferenceResponse, Confere
 from app.services import conference_service
 from app.services.program_generator import generate_program_pdf
 from app.api.deps import require_admin, get_current_user
+from app.schemas.conference import ConferenceCreate, ConferenceResponse, ConferenceUpdate, ProgramRequest
+
 
 router = APIRouter(prefix="/conferences", tags=["conferences"])
 
@@ -51,10 +53,16 @@ def delete_conference(conference_id: uuid.UUID, db: Session = Depends(get_db)):
     conference_service.delete_conference(db, conference)
 
 
-@router.get("/{conference_id}/program.pdf", dependencies=[Depends(get_current_user)])
-def download_program(conference_id: uuid.UUID, db: Session = Depends(get_db)):
+from app.schemas.conference import ConferenceCreate, ConferenceResponse, ConferenceUpdate, ProgramRequest
+
+@router.post("/{conference_id}/program.pdf", dependencies=[Depends(get_current_user)])
+def download_program(
+    conference_id: uuid.UUID,
+    payload: ProgramRequest,
+    db: Session = Depends(get_db)
+):
     try:
-        pdf_bytes = generate_program_pdf(db, conference_id)
+        pdf_bytes = generate_program_pdf(db, conference_id, payload.sections)
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
