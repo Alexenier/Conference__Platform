@@ -1,287 +1,261 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="utf-8">
-<style>
-  @font-face {
-    font-family: 'TNR';
-    src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf');
-    font-weight: normal;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'TNR';
-    src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf');
-    font-weight: bold;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'TNR';
-    src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf');
-    font-weight: normal;
-    font-style: italic;
-  }
-  @font-face {
-    font-family: 'TNR';
-    src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-BoldItalic.ttf');
-    font-weight: bold;
-    font-style: italic;
-  }
-
-  @page {
-    size: A4;
-    margin: 20mm 20mm 25mm 20mm;
-    @bottom-center {
-      content: counter(page);
-      font-family: 'TNR', serif;
-      font-size: 11pt;
+  <meta charset="UTF-8">
+  <title>Програма конференції</title>
+  <style>
+    @font-face {
+      font-family: 'TNR';
+      src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf');
+      font-weight: normal;
+      font-style: normal;
     }
-  }
+    @font-face {
+      font-family: 'TNR';
+      src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf');
+      font-weight: bold;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'TNR';
+      src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf');
+      font-weight: normal;
+      font-style: italic;
+    }
+    @font-face {
+      font-family: 'TNR';
+      src: url('/usr/share/fonts/truetype/liberation/LiberationSerif-BoldItalic.ttf');
+      font-weight: bold;
+      font-style: italic;
+    }
 
-  /* Перша сторінка — без номера */
-  @page :first {
-    @bottom-center { content: none; }
-  }
+    @page {
+      size: A4;
+      margin: 20mm 20mm 25mm 20mm;
+      @bottom-center {
+        content: counter(page);
+        font-family: 'TNR', serif;
+        font-size: 12pt;
+      }
+    }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+    @page :first {
+      @bottom-center {
+        content: none;
+      }
+    }
 
-  body {
-    font-family: 'TNR', serif;
-    font-size: 12pt;
-    color: #000;
-    line-height: 1.3;
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  /* ============================================================
-     ТИТУЛЬНА СТОРІНКА
-     ============================================================ */
-  .title-page {
-    page-break-after: always;
-    text-align: center;
-    padding-top: 8mm;
-  }
+    body {
+      font-family: 'TNR', serif;
+      font-size: 12pt;
+      line-height: 1.4;
+      color: #000;
+    }
 
-  .ministry {
-    font-weight: bold;
-    font-size: 10pt;
-    line-height: 1.35;
-    margin-bottom: 1mm;
-  }
+    /* ===== Title Page ===== */
+    .title-page {
+      page-break-after: always;
+      text-align: center;
+      padding-top: 8mm;
+    }
 
-  .institution {
-    font-size: 10pt;
-    line-height: 1.35;
-    margin-bottom: 4mm;
-  }
+    .ministry {
+      font-size: 10pt;
+      font-weight: bold;
+      font-variant: small-caps;
+    }
 
-  .institution.bold {
-    font-weight: bold;
-  }
+    .institutions {
+      font-size: 10pt;
+      margin-top: 4mm;
+    }
 
-  .conf-subtitle {
-    font-weight: bold;
-    font-size: 10pt;
-    line-height: 1.4;
-    margin-top: 12mm;
-    margin-bottom: 3mm;
-  }
+    .institutions .institution {
+      margin-bottom: 2mm;
+    }
 
-  .conf-name {
-    font-weight: bold;
-    font-size: 18pt;
-    line-height: 1.3;
-    margin-top: 8mm;
-    margin-bottom: 8mm;
-  }
+    .institutions .institution.bold {
+      font-weight: bold;
+    }
 
-  .program-word {
-    font-size: 14pt;
-    font-weight: normal;
-    letter-spacing: 8px;
-    margin-top: 18mm;
-    margin-bottom: 18mm;
-  }
+    .conference-subtitle {
+      font-size: 10pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 12mm;
+    }
 
-  .conf-date {
-    font-size: 12pt;
-    margin-top: 18mm;
-  }
+    .conference-title {
+      font-size: 18pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 8mm;
+      line-height: 1.3;
+    }
 
-  .conf-city {
-    font-size: 12pt;
-    margin-top: 28mm;
-  }
+    .program-label {
+      font-size: 14pt;
+      letter-spacing: 8px;
+      margin-top: 18mm;
+    }
 
-  /* ============================================================
-     СЕКЦІЯ
-     ============================================================ */
-  .section-block {
-    page-break-before: always;
-  }
+    .conference-date {
+      font-size: 12pt;
+      margin-top: 18mm;
+    }
 
-  /* Перша секція — без page-break */
-  .section-block:first-of-type {
-    page-break-before: avoid;
-  }
+    .city-year {
+      font-size: 12pt;
+      margin-top: 28mm;
+    }
 
-  .separator {
-    text-align: center;
-    font-size: 11pt;
-    margin: 6mm 0 5mm 0;
-  }
+    /* ===== Section ===== */
+    .section {
+      page-break-before: always;
+    }
 
-  .section-title {
-    text-align: center;
-    font-weight: bold;
-    font-size: 14pt;
-    margin-bottom: 5mm;
-  }
+    .separator {
+      text-align: center;
+      font-size: 12pt;
+      margin-bottom: 6mm;
+    }
 
-  /* Метадані секції: Головуючі / Секретар / Місце */
-  .section-meta {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12pt;
-    margin-bottom: 5mm;
-  }
+    .section-title {
+      font-size: 14pt;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 6mm;
+    }
 
-  .section-meta td {
-    padding: 0.5mm 0;
-    vertical-align: top;
-  }
+    /* ===== Metadata Table ===== */
+    .metadata-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 6mm;
+      font-size: 12pt;
+    }
 
-  .meta-label {
-    font-weight: bold;
-    white-space: nowrap;
-    width: 40mm;
-    padding-right: 3mm;
-  }
+    .metadata-table td {
+      padding: 1mm 2mm;
+      vertical-align: top;
+    }
 
-  .meta-rank {
-    white-space: nowrap;
-    width: 42mm;
-    padding-right: 2mm;
-  }
+    .metadata-table .label {
+      width: 38mm;
+    }
 
-  .meta-name {
-    font-weight: bold;
-  }
+    .metadata-table .rank {
+      width: 48mm;
+    }
 
-  /* ============================================================
-     ТАБЛИЦЯ ДОПОВІДЕЙ
-     ============================================================ */
-  .reports-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12pt;
-    line-height: 1.4;
-  }
+    .metadata-table .name {
+      font-weight: bold;
+    }
 
-  .reports-table td {
-    border: 0.5pt solid #000;
-    padding: 2mm 3mm;
-    vertical-align: top;
-  }
+    /* ===== Reports Table ===== */
+    .reports-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12pt;
+      line-height: 1.4;
+    }
 
-  .rep-num {
-    width: 9mm;
-    text-align: center;
-    font-weight: normal;
-    white-space: nowrap;
-  }
+    .reports-table td {
+      border: 0.5pt solid black;
+      padding: 2mm 3mm;
+      vertical-align: top;
+    }
 
-  .rep-authors {
-    font-weight: normal;
-    margin-bottom: 1mm;
-  }
+    .reports-table .number-cell {
+      width: 9mm;
+      text-align: center;
+    }
 
-  .rep-title {
-    font-weight: bold;
-  }
-</style>
+    .reports-table .authors {
+      font-weight: normal;
+    }
+
+    .reports-table .report-title {
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body>
 
-{# ============================================================
-   ТИТУЛЬНА СТОРІНКА
-   ============================================================ #}
-<div class="title-page">
-  <div class="ministry">{{ ministry_text }}</div>
+  <div class="title-page">
+    <p class="ministry">{{ ministry_text }}</p>
 
-  {% if institution1_text %}
-  <div class="institution">{{ institution1_text | replace('\n', '<br>') | safe }}</div>
-  {% endif %}
+    <div class="institutions">
+      {% if institution1_text %}
+      <p class="institution">{{ institution1_text | replace('\n', '<br>') | safe }}</p>
+      {% endif %}
+      {% if institution2_text %}
+      <p class="institution bold">{{ institution2_text | replace('\n', '<br>') | safe }}</p>
+      {% endif %}
+    </div>
 
-  {% if institution2_text %}
-  <div class="institution bold">{{ institution2_text | replace('\n', '<br>') | safe }}</div>
-  {% endif %}
-
-  {% if conference.description %}
-  <div class="conf-subtitle">{{ conference.description | upper }}</div>
-  {% endif %}
-
-  <div class="conf-name">{{ conference.title | upper }}</div>
-
-  <div class="program-word">П Р О Г Р А М А</div>
-
-  <div class="conf-date">{{ date_formatted }}</div>
-  <div class="conf-city">{{ conference_city }} – {{ conference.submission_deadline.year }}</div>
-</div>
-
-{# ============================================================
-   СЕКЦІЇ
-   ============================================================ #}
-{% for section in sections %}
-<div class="section-block">
-
-  <div class="separator">* * *</div>
-  <div class="section-title">СЕКЦІЯ {{ loop.index }} – {{ section.name }}</div>
-
-  {# Метадані секції #}
-  {% if section.heads or section.secretary or section.location %}
-  <table class="section-meta">
-    {% for head in section.heads %}
-    <tr>
-      <td class="meta-label">{% if loop.first %}Головуючі:{% endif %}</td>
-      <td class="meta-rank">{{ head.rank }}</td>
-      <td class="meta-name">{{ head.name }}</td>
-    </tr>
-    {% endfor %}
-
-    {% if section.secretary %}
-    <tr>
-      <td class="meta-label">Секретар:</td>
-      <td class="meta-rank">{{ section.secretary.rank }}</td>
-      <td class="meta-name">{{ section.secretary.name }}</td>
-    </tr>
+    {% if conference.description %}
+    <p class="conference-subtitle">{{ conference.description | upper }}</p>
     {% endif %}
 
-    {% if section.location %}
-    <tr>
-      <td class="meta-label">Місце проведення:</td>
-      <td colspan="2">{{ section.location }}</td>
-    </tr>
+    <p class="conference-title">{{ conference.title | upper }}</p>
+    <p class="program-label">П Р О Г Р А М А</p>
+    <p class="conference-date">{{ date_formatted }}</p>
+    <p class="city-year">{{ conference_city }} – {{ conference.submission_deadline.year }}</p>
+  </div>
+
+  {% for section in sections %}
+  <div class="section">
+    <p class="separator">*&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;*</p>
+    <p class="section-title">СЕКЦІЯ {{ loop.index }} – {{ section.name }}</p>
+
+    {% if section.heads or section.secretary or section.location %}
+    <table class="metadata-table">
+      {% for head in section.heads %}
+      <tr>
+        <td class="label">{% if loop.first %}Головуючі:{% endif %}</td>
+        <td class="rank">{{ head.rank }}</td>
+        <td class="name">{{ head.name }}</td>
+      </tr>
+      {% endfor %}
+      {% if section.secretary %}
+      <tr>
+        <td class="label">Секретар:</td>
+        <td class="rank">{{ section.secretary.rank }}</td>
+        <td class="name">{{ section.secretary.name }}</td>
+      </tr>
+      {% endif %}
+      {% if section.location %}
+      <tr>
+        <td class="label">Місце проведення:</td>
+        <td class="location-value" colspan="2">{{ section.location }}</td>
+      </tr>
+      {% endif %}
+    </table>
     {% endif %}
-  </table>
-  {% endif %}
 
-  {# Список доповідей #}
-  <table class="reports-table">
-    {% for sub in section.submissions %}
-    <tr>
-      <td class="rep-num">{{ loop.index }}.</td>
-      <td>
-        {% if sub.authors_str %}
-        <div class="rep-authors">{{ sub.authors_str }}</div>
-        {% endif %}
-        <div class="rep-title">{{ sub.title | upper }}</div>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-
-</div>
-{% endfor %}
+    <table class="reports-table">
+      {% for sub in section.submissions %}
+      <tr>
+        <td class="number-cell">{{ loop.index }}.</td>
+        <td>
+          {% if sub.authors_str %}
+          <span class="authors">{{ sub.authors_str }}</span><br>
+          {% endif %}
+          <span class="report-title">{{ sub.title }}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endfor %}
 
 </body>
 </html>
