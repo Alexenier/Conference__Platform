@@ -23,6 +23,13 @@ const STATUS_TRANSITION_LABELS = {
   draft:        "Повернути в чернетку",
 };
 
+const SECTIONS = [
+  "Інтелектуальні системи",
+  "Сучасні інформаційні технології",
+  "Методика викладання інформатики та ІКТ в освіті",
+  "Моделювання та інформаційні технології",
+];
+
 let allConferences = [];
 let currentSubmission = null;
 let searchTimeout = null;
@@ -79,7 +86,6 @@ async function loadSubmissions() {
 
   try {
     let submissions;
-
     if (searchQuery) {
       submissions = await api.searchSubmissions(searchQuery, conf || null);
       if (status) submissions = submissions.filter(s => s.status === status);
@@ -104,7 +110,6 @@ async function loadSubmissions() {
       const authors = s.authors.map(a => a.full_name).join(", ") || "—";
       const conf = allConferences.find(c => c.id === s.conference_id);
       const confTitle = conf ? conf.title : "—";
-
       return `
         <tr>
           <td>
@@ -179,7 +184,7 @@ async function openDetail(submissionId) {
       const label = STATUS_TRANSITION_LABELS[newStatus] || newStatus;
       const cls = newStatus === "accepted" ? "success" : newStatus === "rejected" ? "danger" : "primary";
       footer.innerHTML += `
-        <button class="btn btn-${cls}" onclick="changeStatus('${s.id}', '${newStatus}')" title="${label}">
+        <button class="btn btn-${cls}" onclick="changeStatus('${s.id}', '${newStatus}')">
           ${label}
         </button>`;
     });
@@ -208,12 +213,9 @@ function resetFilters() {
   loadSubmissions();
 }
 
-const SECTIONS = [
-  "Інтелектуальні системи",
-  "Сучасні інформаційні технології",
-  "Методика викладання інформатики та ІКТ в освіті",
-  "Моделювання та інформаційні технології",
-];
+// ============================================================
+// Програма конференції
+// ============================================================
 
 function openProgramModal() {
   const confId = document.getElementById("filterConference").value;
@@ -223,21 +225,12 @@ function openProgramModal() {
   }
 
   const form = document.getElementById("sectionsForm");
-  form.innerHTML = `
-    <div class="border rounded p-3 mb-3 bg-light">
-      <h6 class="fw-bold mb-2">Загальні дані</h6>
-      <div>
-        <label class="form-label small text-muted">Підзаголовок конференції</label>
-        <input type="text" class="form-control form-control-sm" id="conf_subtitle"
-          placeholder="Двадцять третя всеукраїнська конференція студентів і молодих науковців">
-      </div>
-    </div>
-  ` + SECTIONS.map((section, idx) => `
+  form.innerHTML = SECTIONS.map((section, idx) => `
     <div class="border rounded p-3 mb-3">
       <h6 class="fw-bold mb-3">Секція ${idx + 1} – ${section}</h6>
       <div class="mb-2">
         <label class="form-label small text-muted">Головуючі (кожен з нового рядка, формат: посада Прізвище І. О.)</label>
-        <textarea class="form-control form-control-sm" id="chairs_${idx}" rows="4"
+        <textarea class="form-control form-control-sm" id="chairs_${idx}" rows="3"
           placeholder="к. ф-м. н., доцент Пенко Валерій Георгійович"></textarea>
       </div>
       <div class="mb-2">
@@ -258,32 +251,45 @@ function openProgramModal() {
 
 async function generateProgram() {
   const confId = document.getElementById("filterConference").value;
-  if (!confId) {
-    alert("Оберіть конференцію");
-    return;
-  }
+  if (!confId) { alert("Оберіть конференцію"); return; }
 
-  // Закриваємо модальне вікно якщо відкрите
+  // Збираємо дані секцій з форми
+  const sections = {};
+  SECTIONS.forEach((section, idx) => {
+    const chairsRaw = document.getElementById(`chairs_${idx}`)?.value.trim() || "";
+    const chairs = chairsRaw ? chairsRaw.split("\n").map(s => s.trim()).filter(Boolean) : [];
+    const secretary = document.getElementById(`secretary_${idx}`)?.value.trim() || "";
+    const location = document.getElementById(`location_${idx}`)?.value.trim() || "";
+    if (chairs.length || secretary || location) {
+      sections[section] = { chairs: chairs.join("\n"), secretary, location };
+    }
+  });
+
   const modal = bootstrap.Modal.getInstance(document.getElementById("programModal"));
   if (modal) modal.hide();
 
   try {
     const token = localStorage.getItem("token");
     const response = await fetch(`/api/conferences/${confId}/program.pdf`, {
-      method: "GET",                                    // ← було POST
-      headers: { "Authorization": `Bearer ${token}` },
-      // body прибрали
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ sections }),
     });
 
     if (!response.ok) {
-      alert("Помилка генерації програми");
+      const err = await response.json().catch(() => ({ detail: "Помилка генерації" }));
+      alert(err.detail || "Помилка генерації програми");
       return;
     }
 
+    const conf = allConferences.find(c => c.id === confId);
     const blob = await response.blob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `програма.pdf`;
+    a.download = `програма_${conf ? conf.title : confId}.pdf`;
     a.click();
     URL.revokeObjectURL(a.href);
   } catch (e) {
@@ -291,22 +297,65 @@ async function generateProgram() {
   }
 }
 
+// ============================================================
+// Збірник конференції
+// ============================================================
+
+async function downloadCollection() {
+  const confId = document.getElementById("filterConference").value;
+  if (!confId) {
+    alert("Оберіть конференцію для завантаження збірника");
+    return;
+  }
+
+  const btn = document.getElementById("collectionBtn");
+  const origText = btn.innerHTML;
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Генерація...`;
+  btn.disabled = true;
+
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`/api/conferences/${confId}/collection.pdf`, {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: "Помилка генерації" }));
+      alert(err.detail || "Помилка генерації збірника");
+      return;
+    }
+
+    const conf = allConferences.find(c => c.id === confId);
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `збірник_${conf ? conf.title : confId}.pdf`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// Завантаження файлу заявки
+// ============================================================
+
 async function downloadFile(submissionId, fileId, fileName) {
   const token = localStorage.getItem("token");
   const response = await fetch(api.downloadFile(submissionId, fileId), {
     headers: { "Authorization": `Bearer ${token}` }
   });
-  if (!response.ok) {
-    alert("Помилка завантаження файлу");
-    return;
-  }
+  if (!response.ok) { alert("Помилка завантаження файлу"); return; }
   const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = fileName;
   a.click();
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(a.href);
 }
 
 init();

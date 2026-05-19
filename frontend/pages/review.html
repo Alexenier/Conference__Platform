@@ -24,6 +24,7 @@
 
 <div class="container mt-4">
 
+  <!-- Фільтри -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="row g-3 align-items-end">
@@ -67,11 +68,18 @@
     </div>
   </div>
 
+  <!-- Заголовок + кнопки документів -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Заявки <span id="submissionsCount" class="text-muted fs-6"></span></h5>
+    <h5 class="mb-0">
+      <i class="bi bi-file-earmark-text"></i> Заявки
+      <span id="submissionsCount" class="text-muted fs-6"></span>
+    </h5>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-primary btn-sm" onclick="openProgramModal()" title="Завантажити програму">
+      <button class="btn btn-outline-primary btn-sm" onclick="openProgramModal()" title="Завантажити програму конференції">
         <i class="bi bi-file-earmark-pdf"></i> Програма
+      </button>
+      <button id="collectionBtn" class="btn btn-outline-success btn-sm" onclick="downloadCollection()" title="Завантажити збірник тез">
+        <i class="bi bi-book"></i> Збірник
       </button>
     </div>
   </div>
@@ -119,11 +127,15 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="programModalLabel"><i class="bi bi-file-earmark-pdf"></i> Генерація програми конференції</h5>
+        <h5 class="modal-title" id="programModalLabel">
+          <i class="bi bi-file-earmark-pdf"></i> Генерація програми конференції
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted small mb-3">Заповніть дані для кожної секції. Поля необов'язкові — можна залишити порожніми.</p>
+        <p class="text-muted small mb-3">
+          Заповніть дані для кожної секції. Поля необов'язкові — можна залишити порожніми.
+        </p>
         <div id="sectionsForm"></div>
       </div>
       <div class="modal-footer">
