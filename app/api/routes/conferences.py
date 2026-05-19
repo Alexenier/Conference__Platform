@@ -5,12 +5,10 @@ from sqlalchemy.orm import Session
 import io
 
 from app.db.session import get_db
-from app.schemas.conference import ConferenceCreate, ConferenceResponse, ConferenceUpdate
+from app.schemas.conference import ConferenceCreate, ConferenceResponse, ConferenceUpdate, ProgramRequest
 from app.services import conference_service
 from app.services.program_generator import generate_program_pdf
-from app.api.deps import require_admin, get_current_user
-from app.schemas.conference import ConferenceCreate, ConferenceResponse, ConferenceUpdate, ProgramRequest
-
+from app.api.deps import require_admin, require_org_committee, get_current_user
 
 router = APIRouter(prefix="/conferences", tags=["conferences"])
 
@@ -29,7 +27,7 @@ def list_conferences(is_active: bool | None = None, db: Session = Depends(get_db
 def get_conference(conference_id: uuid.UUID, db: Session = Depends(get_db)):
     conference = conference_service.get_conference(db, conference_id)
     if not conference:
-        raise HTTPException(status_code=404, detail="Конференция не найдена")
+        raise HTTPException(status_code=404, detail="Конференцію не знайдено")
     return conference
 
 
@@ -41,7 +39,7 @@ def update_conference(
 ):
     conference = conference_service.get_conference(db, conference_id)
     if not conference:
-        raise HTTPException(status_code=404, detail="Конференция не найдена")
+        raise HTTPException(status_code=404, detail="Конференцію не знайдено")
     return conference_service.update_conference(db, conference, payload)
 
 
@@ -49,20 +47,18 @@ def update_conference(
 def delete_conference(conference_id: uuid.UUID, db: Session = Depends(get_db)):
     conference = conference_service.get_conference(db, conference_id)
     if not conference:
-        raise HTTPException(status_code=404, detail="Конференция не найдена")
+        raise HTTPException(status_code=404, detail="Конференцію не знайдено")
     conference_service.delete_conference(db, conference)
 
 
-from app.schemas.conference import ConferenceCreate, ConferenceResponse, ConferenceUpdate, ProgramRequest
-
-@router.post("/{conference_id}/program.pdf", dependencies=[Depends(get_current_user)])
+@router.post("/{conference_id}/program.pdf", dependencies=[Depends(require_org_committee)])
 def download_program(
     conference_id: uuid.UUID,
     payload: ProgramRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     try:
-        pdf_bytes = generate_program_pdf(db, conference_id, payload.sections)
+        pdf_bytes = generate_program_pdf(db, conference_id)
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
@@ -71,10 +67,12 @@ def download_program(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-    
 
-@router.get("/{conference_id}/collection.pdf", dependencies=[Depends(require_admin)])
+
+@router.get("/{conference_id}/collection.pdf", dependencies=[Depends(require_org_committee)])
 def download_collection(conference_id: uuid.UUID, db: Session = Depends(get_db)):
     try:
         from app.services.collection_generator import generate_collection_pdf
@@ -87,4 +85,6 @@ def download_collection(conference_id: uuid.UUID, db: Session = Depends(get_db))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
