@@ -110,13 +110,7 @@ async function loadConferences() {
           </span>
         </td>
         <td class="text-end d-flex gap-1 justify-content-end">
-          <button class="btn btn-outline-secondary btn-sm" title="Завантажити програму" onclick="downloadPdf('program', '${c.id}', '${c.title}')">
-            <i class="bi bi-file-earmark-pdf"></i>
-          </button>
-          <button class="btn btn-outline-primary btn-sm" title="Завантажити збірник" onclick="downloadPdf('collection', '${c.id}', '${c.title}')">
-            <i class="bi bi-book"></i>
-          </button>
-          <button class="btn btn-outline-warning btn-sm" title="Редагувати конференцію" onclick="openEditConference('${c.id}', '${c.title}', '${c.description || ""}', '${c.submission_deadline}')">
+          <button class="btn btn-outline-warning btn-sm" title="Редагувати конференцію" onclick="openEditConference('${c.id}', '${c.title}', '${c.description || ""}', '${c.submission_deadline}', ${c.is_active})">
             <i class="bi bi-pencil"></i>
           </button>
           <button class="btn btn-outline-danger btn-sm" title="Видалити конференцію" onclick="deleteConference('${c.id}', '${c.title}')">
@@ -126,34 +120,6 @@ async function loadConferences() {
       </tr>`).join("");
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">${e.message}</td></tr>`;
-  }
-}
-
-async function downloadPdf(type, conferenceId, conferenceTitle) {
-  const token = localStorage.getItem("token");
-  const url = type === "program"
-    ? api.downloadProgram(conferenceId)
-    : api.downloadCollection(conferenceId);
-  const fileName = type === "program"
-    ? `програма_${conferenceTitle}.pdf`
-    : `збірник_${conferenceTitle}.pdf`;
-
-  try {
-    const response = await fetch(url, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    if (!response.ok) {
-      alert("Помилка завантаження PDF");
-      return;
-    }
-    const blob = await response.blob();
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  } catch (e) {
-    alert(e.message);
   }
 }
 
@@ -188,11 +154,12 @@ async function createConference() {
   }
 }
 
-function openEditConference(id, title, description, deadline) {
+function openEditConference(id, title, description, deadline, isActive) {
   document.getElementById("editConfId").value = id;
   document.getElementById("editConfTitle").value = title;
   document.getElementById("editConfDescription").value = description;
   document.getElementById("editConfDeadline").value = deadline.slice(0, 16);
+  document.getElementById("editConfActive").checked = isActive;
   document.getElementById("editConfError").classList.add("d-none");
   new bootstrap.Modal(document.getElementById("editConferenceModal")).show();
 }
@@ -205,6 +172,7 @@ async function saveEditConference() {
   const title = document.getElementById("editConfTitle").value.trim();
   const description = document.getElementById("editConfDescription").value.trim();
   const deadline = document.getElementById("editConfDeadline").value;
+  const is_active = document.getElementById("editConfActive").checked;
 
   if (!title || !deadline) {
     errEl.textContent = "Назва та дедлайн обов'язкові";
@@ -217,6 +185,7 @@ async function saveEditConference() {
       title,
       description: description || null,
       submission_deadline: new Date(deadline).toISOString(),
+      is_active,
     });
     bootstrap.Modal.getInstance(document.getElementById("editConferenceModal")).hide();
     await loadConferences();

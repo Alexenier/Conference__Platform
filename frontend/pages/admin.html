@@ -45,7 +45,6 @@
         <i class="bi bi-person-plus"></i> Додати користувача
       </button>
     </div>
-    <div id="usersAlert" class="alert d-none"></div>
     <div class="card shadow-sm">
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -73,7 +72,6 @@
         <i class="bi bi-plus-lg"></i> Нова конференція
       </button>
     </div>
-    <div id="conferencesAlert" class="alert d-none"></div>
     <div class="card shadow-sm">
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -128,7 +126,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-        <button class="btn btn-primary" onclick="createUser()" title="Створити користувача">
+        <button class="btn btn-primary" onclick="createUser()">
           <i class="bi bi-check-lg"></i> Створити
         </button>
       </div>
@@ -151,8 +149,8 @@
           <input type="text" id="confTitle" class="form-control" placeholder="ІІС&Т 2025">
         </div>
         <div class="mb-3">
-          <label for="confDescription" class="form-label">Опис</label>
-          <textarea id="confDescription" class="form-control" rows="3" placeholder="Короткий опис конференції"></textarea>
+          <label for="confDescription" class="form-label">Підзаголовок / опис</label>
+          <textarea id="confDescription" class="form-control" rows="2" placeholder="Двадцять третя всеукраїнська конференція..."></textarea>
         </div>
         <div class="mb-3">
           <label for="confDeadline" class="form-label">Дедлайн подачі тез</label>
@@ -161,7 +159,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-        <button class="btn btn-primary" onclick="createConference()" title="Створити конференцію">
+        <button class="btn btn-primary" onclick="createConference()">
           <i class="bi bi-check-lg"></i> Створити
         </button>
       </div>
@@ -185,17 +183,26 @@
           <input type="text" id="editConfTitle" class="form-control">
         </div>
         <div class="mb-3">
-          <label for="editConfDescription" class="form-label">Опис</label>
-          <textarea id="editConfDescription" class="form-control" rows="3"></textarea>
+          <label for="editConfDescription" class="form-label">Підзаголовок / опис</label>
+          <textarea id="editConfDescription" class="form-control" rows="2"></textarea>
         </div>
         <div class="mb-3">
           <label for="editConfDeadline" class="form-label">Дедлайн подачі тез</label>
           <input type="datetime-local" id="editConfDeadline" class="form-control">
+          <div class="form-text text-muted">
+            <i class="bi bi-info-circle"></i> Зміна дедлайну дозволяє продовжити або скоротити прийом тез
+          </div>
+        </div>
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="editConfActive">
+            <label class="form-check-label" for="editConfActive">Конференція активна</label>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-        <button class="btn btn-primary" onclick="saveEditConference()" title="Зберегти зміни">
+        <button class="btn btn-primary" onclick="saveEditConference()">
           <i class="bi bi-check-lg"></i> Зберегти
         </button>
       </div>
