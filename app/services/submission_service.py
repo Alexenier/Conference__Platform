@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.submission import Submission
 from app.models.submission_author import SubmissionAuthor
+from app.models.conference import Conference
 from app.schemas.submission import SubmissionCreate
 
 
@@ -88,6 +89,26 @@ def update_status(db: Session, submission: Submission, new_status: str) -> Submi
         raise ValueError(
             f"Переход {submission.status} → {new_status} недопустим. Разрешено: {allowed}"
         )
+
+    # Перевірка дедлайну: подати заявку (draft → submitted) можна
+    # лише до настання submission_deadline конференції.
+    if new_status == "submitted":
+        conference = (
+            db.query(Conference)
+            .filter(Conference.id == submission.conference_id)
+            .first()
+        )
+        if conference and conference.submission_deadline:
+            now = datetime.now(timezone.utc)
+            deadline = conference.submission_deadline
+            # Якщо дедлайн збережено без таймзони — трактуємо його як UTC
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(tzinfo=timezone.utc)
+            if now > deadline:
+                raise ValueError(
+                    "Дедлайн подачі заявок минув — подати заявку неможливо"
+                )
+
     submission.status = new_status
     if new_status == "submitted":
         submission.submitted_at = datetime.utcnow()
