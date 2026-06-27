@@ -122,3 +122,15 @@ def test_participant_cannot_change_to_accepted(client, participant_token, admin_
         headers={"Authorization": f"Bearer {participant_token}"}
     )
     assert response.status_code == 403
+
+
+def test_upload_invalid_format(client, participant_token, admin_token):
+    # Завантаження файлу непідтримуваного формату має відхилятися з кодом 400
+    # ще до звернення до об'єктного сховища.
+    sub_id = create_submission(client, participant_token, admin_token)
+    response = client.post(
+        f"/submissions/{sub_id}/files/",
+        files={"file": ("notes.txt", b"plain text content", "text/plain")},
+        headers={"Authorization": f"Bearer {participant_token}"}
+    )
+    assert response.status_code == 400

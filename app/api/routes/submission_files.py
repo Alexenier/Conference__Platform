@@ -17,6 +17,7 @@ from app.api.deps import get_current_user
 router = APIRouter(prefix="/submissions/{submission_id}/files", tags=["submission-files"])
 
 DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+ALLOWED_UPLOAD_EXTENSIONS = (".docx", ".pdf")
 
 
 @router.post("/")
@@ -26,6 +27,16 @@ async def upload_file(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # Перевірка формату файлу до будь-якого звернення до сховища.
+    # Виконується поза блоком try, оскільки except Exception нижче
+    # перехопив би HTTPException і повернув би 500 замість 400.
+    filename = (file.filename or "").lower()
+    if not filename.endswith(ALLOWED_UPLOAD_EXTENSIONS):
+        raise HTTPException(
+            status_code=400,
+            detail="Підтримуються лише файли формату .docx та .pdf",
+        )
+
     try:
         record, file_bytes = upload_submission_file(
             db=db,

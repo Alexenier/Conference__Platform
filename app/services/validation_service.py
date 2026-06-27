@@ -13,7 +13,7 @@ def validate_and_save(
     file_bytes: bytes,
 ) -> ValidationReport:
 
-    # Якщо є Anthropic API ключ — використовуємо AI валідатор
+    
     if settings.anthropic_api_key:
         try:
             from app.services.ai_validator import validate_with_claude

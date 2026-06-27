@@ -198,15 +198,11 @@ async function uploadFile() {
     let html = `<div class="alert alert-success">Файл завантажено!</div>`;
     if (result.validation) {
       const v = result.validation;
-      if (v.ok === true) {
-        html += `<div class="alert alert-success"><i class="bi bi-check-circle"></i> Тези оформлені коректно</div>`;
-      } else if (v.ok === false) {
-        const errors = v.issues.filter(i => i.severity === "error");
-        const warnings = v.issues.filter(i => i.severity === "warning");
-        html += `<div class="alert alert-warning">
-          <strong>Знайдено проблеми:</strong><br>
-          ${errors.map(i => `<div class="text-danger"><i class="bi bi-x-circle"></i> ${i.message}</div>`).join("")}
-          ${warnings.map(i => `<div class="text-warning"><i class="bi bi-exclamation-triangle"></i> ${i.message}</div>`).join("")}
+      html += `<div class="alert alert-success"><i class="bi bi-check-circle"></i> Файл прийнято</div>`;
+      if (v.issues && v.issues.length > 0) {
+        html += `<div class="alert alert-info mt-2">
+        <strong>Рекомендації щодо оформлення:</strong><br>
+        ${[...new Set(v.issues.map(i => i.message))].map(msg => `<div><i class="bi bi-info-circle"></i> ${msg}</div>`).join("")}
         </div>`;
       }
     }

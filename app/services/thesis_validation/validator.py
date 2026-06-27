@@ -12,29 +12,28 @@ from docx.shared import Length, Pt
 
 from .models import Severity, ValidationIssue, ValidationReport
 
-# --- Требования (можешь вынести в Settings/конфиг) ---
+
 REQUIRED_FONT = "Times New Roman"
 REQUIRED_SIZE_PT = 14
 
 CAPTION_SIZE_PT = 12
 
 # Поля 20 мм => в python-docx удобнее проверять в "twips" (1 inch = 1440 twips)
-# 20 мм = 0.787401... inch => 1134 twips (примерно)
+
 MM_TO_INCH = 1 / 25.4
 TWIPS_PER_INCH = 1440
 MARGIN_20MM_TWIPS = int(round(20 * MM_TO_INCH * TWIPS_PER_INCH))
 
-# Допуски (Word иногда хранит значения не идеально)
+# Допуски 
 MARGIN_TWIPS_TOL = 40  # ~0.7 мм
 FONT_SIZE_TOL = 0.5    # pt
 INDENT_CM = 1.25       # абзацный отступ
 LINE_SPACING_TARGET = 1.15
 LINE_SPACING_TOL = 0.06
 
-# Объем 1-2 страницы. В DOCX нет "page count" без Word/LibreOffice,
-# поэтому делаем грубую эвристику по количеству символов/абзацев.
-MIN_TEXT_CHARS = 800     # примерно 1 стр с 14pt
-MAX_TEXT_CHARS = 6500    # примерно 2 стр с 14pt
+
+MIN_TEXT_CHARS = 800     
+MAX_TEXT_CHARS = 6500    
 
 
 @dataclass(frozen=True)
