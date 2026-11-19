@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production"
     access_token_expire_minutes: int = 60 * 24
 
-    admin_email: str = "admin@conference.com"
-    admin_password: str = "admin123"
+    admin_email: str
+    admin_password: str
     admin_full_name: str = "Адміністратор"
 
     # Anthropic Claude API — опціональний
